@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}GharValue AI — Intelligent Indian Real Estate Valuation Platform{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-content">
+        <div class="hero-pill">
+          <span class="dot"></span>
+          <span>Verified Indian Real Estate ML Engine</span>
+        </div>
+
+        <h1 class="hero-title">
+          Accurate House Price Predictions for <span>Indian Metros</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          Leverage high-precision machine learning trained on 12,000 verified property transactions across Mumbai, Bangalore, Pune, Hyderabad, and Nagpur. Get realistic valuations in seconds.
+        </p>
+
+        <div class="hero-cta-group">
+          <a href="{{ url_for('predict') }}" class="btn btn-primary btn-lg" id="heroPredictBtn">
+            <i class="fa-solid fa-calculator"></i> Predict House Price
+          </a>
+          <a href="{{ url_for('compare') }}" class="btn btn-secondary btn-lg" id="heroCompareBtn">
+            <i class="fa-solid fa-code-compare"></i> Compare Properties
+          </a>
+          <a href="{{ url_for('market') }}" class="btn btn-secondary btn-lg" id="heroMarketBtn">
+            <i class="fa-solid fa-chart-line"></i> Market Explorer
+          </a>
+        </div>
+
+        <!-- Live dataset stats -->
+        <div class="hero-metrics">
+          <div class="hero-metric-item">
+            <h4>12,000</h4>
+            <p>Verified Property Records</p>
+          </div>
+          <div class="hero-metric-item">
+            <h4>0.9856</h4>
+            <p>Random Forest R² Score</p>
+          </div>
+          <div class="hero-metric-item">
+            <h4>5 Metros</h4>
+            <p>Top Tier 1 & 2 Markets</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-image-wrapper">
+        <img src="{{ url_for('static', filename='images/hero_real_estate.jpg') }}" alt="Luxury Indian Residential Architecture">
+        <div class="hero-image-badge">
+          <div>
+            <div class="hero-badge-title">Enterprise Valuation Model</div>
+            <div class="hero-badge-sub">18 Spatial & Structural Attributes</div>
+          </div>
+          <div class="hero-badge-chip">Active AI</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Methodology</div>
+      <h2 class="section-title">How Our Machine Learning Engine Works</h2>
+      <p class="section-desc">Transparent, mathematically grounded property valuation powered by an end-to-end Scikit-Learn preprocessing and regression pipeline.</p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-sliders"></i></div>
+        <h3>1. Multi-Dimensional Input</h3>
+        <p>Provide specific property parameters including exact carpet & super area, BHK configuration, floor positioning, locality tier, and distance to transit hubs.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-brain"></i></div>
+        <h3>2. ML Pipeline Inference</h3>
+        <p>Input data is transformed via one-hot encoding and median imputation before passing into our verified Random Forest Regressor (R² = 0.9856, MAE = ₹5.81L).</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+        <h3>3. Instant Valuation & Context</h3>
+        <p>Receive comprehensive valuation in Indian Rupees (INR) and Lakhs/Crores alongside price per square foot benchmarking against city averages.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- City Market Intelligence Preview -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Market Insights</div>
+      <h2 class="section-title">Metro Price Benchmarks</h2>
+      <p class="section-desc">Real statistical averages computed directly from our 12,000-record property dataset.</p>
+    </div>
+
+    <div class="feature-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+      <div class="card" style="border-top: 4px solid var(--primary-700);">
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary-600); text-transform: uppercase;">Financial Capital</div>
+        <h3 style="margin: 0.4rem 0;">Mumbai</h3>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary-900);">₹1.62 Cr</div>
+        <p style="font-size: 0.8rem; color: var(--gray-500); margin-top: 0.2rem;">Avg Price (3,056 listings)</p>
+        <div style="margin-top: 1rem;">
+          <a href="{{ url_for('market') }}?city=Mumbai" class="btn btn-secondary btn-sm btn-block">Explore Mumbai</a>
+        </div>
+      </div>
+
+      <div class="card" style="border-top: 4px solid var(--primary-600);">
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary-600); text-transform: uppercase;">Silicon Valley</div>
+        <h3 style="margin: 0.4rem 0;">Bangalore</h3>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary-900);">₹98.01 Lakh</div>
+        <p style="font-size: 0.8rem; color: var(--gray-500); margin-top: 0.2rem;">Avg Price (2,410 listings)</p>
+        <div style="margin-top: 1rem;">
+          <a href="{{ url_for('market') }}?city=Bangalore" class="btn btn-secondary btn-sm btn-block">Explore Bangalore</a>
+        </div>
+      </div>
+
+      <div class="card" style="border-top: 4px solid var(--primary-500);">
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary-600); text-transform: uppercase;">IT & Pharma Hub</div>
+        <h3 style="margin: 0.4rem 0;">Hyderabad</h3>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary-900);">₹76.53 Lakh</div>
+        <p style="font-size: 0.8rem; color: var(--gray-500); margin-top: 0.2rem;">Avg Price (2,125 listings)</p>
+        <div style="margin-top: 1rem;">
+          <a href="{{ url_for('market') }}?city=Hyderabad" class="btn btn-secondary btn-sm btn-block">Explore Hyderabad</a>
+        </div>
+      </div>
+
+      <div class="card" style="border-top: 4px solid var(--primary-400);">
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary-600); text-transform: uppercase;">Cultural & Auto Capital</div>
+        <h3 style="margin: 0.4rem 0;">Pune</h3>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary-900);">₹88.08 Lakh</div>
+        <p style="font-size: 0.8rem; color: var(--gray-500); margin-top: 0.2rem;">Avg Price (2,674 listings)</p>
+        <div style="margin-top: 1rem;">
+          <a href="{{ url_for('market') }}?city=Pune" class="btn btn-secondary btn-sm btn-block">Explore Pune</a>
+        </div>
+      </div>
+
+      <div class="card" style="border-top: 4px solid var(--primary-300);">
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary-600); text-transform: uppercase;">Smart City Logistics</div>
+        <h3 style="margin: 0.4rem 0;">Nagpur</h3>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary-900);">₹55.09 Lakh</div>
+        <p style="font-size: 0.8rem; color: var(--gray-500); margin-top: 0.2rem;">Avg Price (1,735 listings)</p>
+        <div style="margin-top: 1rem;">
+          <a href="{{ url_for('market') }}?city=Nagpur" class="btn btn-secondary btn-sm btn-block">Explore Nagpur</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Verified Model Accuracy Benchmark -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Machine Learning Rigor</div>
+      <h2 class="section-title">Model Evaluation Leaderboard</h2>
+      <p class="section-desc">Comparison of all four candidate models evaluated on identical test splits.</p>
+    </div>
+
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <div class="table-responsive">
+        <table class="compare-table" style="margin: 0;">
+          <thead>
+            <tr>
+              <th>Model Algorithm</th>
+              <th>Mean Absolute Error (MAE)</th>
+              <th>Root Mean Squared Error (RMSE)</th>
+              <th>R² Score (Accuracy)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background-color: var(--primary-50); font-weight: 600;">
+              <td><i class="fa-solid fa-trophy" style="color: var(--accent-gold); margin-right: 0.5rem;"></i><strong>Random Forest Regressor</strong></td>
+              <td><strong>₹5.81 Lakh</strong></td>
+              <td><strong>₹8.00 Lakh</strong></td>
+              <td><span class="badge badge-success">0.9856 (98.56%)</span></td>
+              <td><span class="badge badge-primary">Active Production Model</span></td>
+            </tr>
+            <tr>
+              <td>Gradient Boosting Regressor</td>
+              <td>₹5.82 Lakh</td>
+              <td>₹8.06 Lakh</td>
+              <td><span class="badge badge-success">0.9854 (98.54%)</span></td>
+              <td><span class="badge badge-gray">Benchmark Candidate</span></td>
+            </tr>
+            <tr>
+              <td>Decision Tree Regressor</td>
+              <td>₹7.38 Lakh</td>
+              <td>₹10.50 Lakh</td>
+              <td><span class="badge badge-info">0.9751 (97.51%)</span></td>
+              <td><span class="badge badge-gray">Benchmark Candidate</span></td>
+            </tr>
+            <tr>
+              <td>Linear Regression Baseline</td>
+              <td>₹13.27 Lakh</td>
+              <td>₹19.40 Lakh</td>
+              <td><span class="badge badge-warning">0.9152 (91.52%)</span></td>
+              <td><span class="badge badge-gray">Baseline</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Call to Action Banner -->
+<section class="section" style="background: linear-gradient(135deg, var(--primary-900) 0%, var(--primary-800) 100%); color: #ffffff; text-align: center; border-radius: 0;">
+  <div class="container">
+    <h2 style="color: #ffffff; margin-bottom: 1rem;">Ready to Estimate Your Property Value?</h2>
+    <p style="color: #d1d5db; max-width: 600px; margin: 0 auto 2rem;">No sign-up or phone number required. Configure your apartment details and get an instant data-driven valuation.</p>
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+      <a href="{{ url_for('predict') }}" class="btn btn-primary btn-lg" style="background: #ffffff; color: var(--primary-900); font-weight: 700;">
+        <i class="fa-solid fa-calculator"></i> Value a Property Now
+      </a>
+      <a href="{{ url_for('compare') }}" class="btn btn-secondary btn-lg" style="background: transparent; color: #ffffff; border-color: rgba(255,255,255,0.4);">
+        <i class="fa-solid fa-code-compare"></i> Compare Multiple Properties
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

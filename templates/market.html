@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}Explore Indian Real Estate Market — GharValue AI{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top: 2.5rem;">
+  <div class="container">
+    <div class="section-header" style="margin-bottom: 2rem;">
+      <div class="section-tag">Market Intelligence</div>
+      <h1 class="section-title">Indian Metro Real Estate Explorer</h1>
+      <p class="section-desc">Analyze residential price trends, price per square foot benchmarks, and locality tier distributions computed directly from 12,000 verified property records.</p>
+    </div>
+
+    <!-- Filters Bar -->
+    <form method="GET" action="{{ url_for('market') }}" class="market-filters-bar" id="marketFilterForm">
+      <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 700; color: var(--gray-700); text-transform: uppercase;">City</label>
+          <select name="city" class="form-control" style="width: 170px; padding: 0.5rem 0.75rem;" onchange="this.form.submit()">
+            <option value="All" {% if selected_city == 'All' %}selected{% endif %}>All 5 Metros</option>
+            <option value="Mumbai" {% if selected_city == 'Mumbai' %}selected{% endif %}>Mumbai</option>
+            <option value="Bangalore" {% if selected_city == 'Bangalore' %}selected{% endif %}>Bangalore</option>
+            <option value="Hyderabad" {% if selected_city == 'Hyderabad' %}selected{% endif %}>Hyderabad</option>
+            <option value="Pune" {% if selected_city == 'Pune' %}selected{% endif %}>Pune</option>
+            <option value="Nagpur" {% if selected_city == 'Nagpur' %}selected{% endif %}>Nagpur</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 700; color: var(--gray-700); text-transform: uppercase;">Locality Tier</label>
+          <select name="tier" class="form-control" style="width: 170px; padding: 0.5rem 0.75rem;" onchange="this.form.submit()">
+            <option value="All" {% if selected_tier == 'All' %}selected{% endif %}>All Tiers</option>
+            <option value="Budget" {% if selected_tier == 'Budget' %}selected{% endif %}>Budget</option>
+            <option value="Mid" {% if selected_tier == 'Mid' %}selected{% endif %}>Mid</option>
+            <option value="Premium" {% if selected_tier == 'Premium' %}selected{% endif %}>Premium</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 700; color: var(--gray-700); text-transform: uppercase;">Bedrooms (BHK)</label>
+          <select name="bhk" class="form-control" style="width: 140px; padding: 0.5rem 0.75rem;" onchange="this.form.submit()">
+            <option value="All" {% if selected_bhk == 'All' %}selected{% endif %}>All BHKs</option>
+            <option value="1" {% if selected_bhk == '1' %}selected{% endif %}>1 BHK</option>
+            <option value="2" {% if selected_bhk == '2' %}selected{% endif %}>2 BHK</option>
+            <option value="3" {% if selected_bhk == '3' %}selected{% endif %}>3 BHK</option>
+            <option value="4" {% if selected_bhk == '4' %}selected{% endif %}>4 BHK</option>
+            <option value="5" {% if selected_bhk == '5' %}selected{% endif %}>5 BHK</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <a href="{{ url_for('market') }}" class="btn btn-secondary btn-sm">
+          <i class="fa-solid fa-rotate-left"></i> Reset Filters
+        </a>
+      </div>
+    </form>
+
+    <!-- Key Filtered Summary Stats -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+      <div class="card" style="border-left: 4px solid var(--primary-700);">
+        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--gray-500);">Sample Count</div>
+        <div style="font-size: 1.85rem; font-weight: 800; color: var(--primary-900); margin: 0.25rem 0;">{{ market_stats.count }}</div>
+        <div style="font-size: 0.8rem; color: var(--gray-500);">Properties in selection</div>
+      </div>
+
+      <div class="card" style="border-left: 4px solid var(--primary-600);">
+        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--gray-500);">Average Market Price</div>
+        <div style="font-size: 1.85rem; font-weight: 800; color: var(--primary-900); margin: 0.25rem 0;">₹{{ '{:.2f}'.format(market_stats.avg_price / 100000) }} Lakh</div>
+        <div style="font-size: 0.8rem; color: var(--gray-500);">₹{{ '{:,.0f}'.format(market_stats.avg_price) }}</div>
+      </div>
+
+      <div class="card" style="border-left: 4px solid var(--primary-500);">
+        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--gray-500);">Median Market Price</div>
+        <div style="font-size: 1.85rem; font-weight: 800; color: var(--primary-900); margin: 0.25rem 0;">₹{{ '{:.2f}'.format(market_stats.median_price / 100000) }} Lakh</div>
+        <div style="font-size: 0.8rem; color: var(--gray-500);">₹{{ '{:,.0f}'.format(market_stats.median_price) }}</div>
+      </div>
+
+      <div class="card" style="border-left: 4px solid var(--primary-400);">
+        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--gray-500);">Avg Price Per Sq.ft</div>
+        <div style="font-size: 1.85rem; font-weight: 800; color: var(--primary-900); margin: 0.25rem 0;">₹{{ '{:,.0f}'.format(market_stats.avg_ppsqft) }}</div>
+        <div style="font-size: 0.8rem; color: var(--gray-500);">Across selected properties</div>
+      </div>
+    </div>
+
+    <!-- Geographic Map of Supported Metros -->
+    <div class="card" style="margin-bottom: 2.5rem; padding: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+          <h3 style="font-size: 1.25rem; color: var(--primary-900);">Geographic Metro Overview</h3>
+          <p style="font-size: 0.85rem; color: var(--gray-500); margin: 0;">City-level property distributions and average valuations across key Indian real estate hubs.</p>
+        </div>
+        <span class="badge badge-primary"><i class="fa-solid fa-map-pin"></i> 5 Major Hubs</span>
+      </div>
+      <div id="metroMap" class="map-container"></div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem; margin-bottom: 2.5rem;">
+      
+      <!-- City Average & Median Comparison -->
+      <div class="card">
+        <h3 style="font-size: 1.15rem; color: var(--primary-900); margin-bottom: 1rem;">
+          <i class="fa-solid fa-city" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+          Average vs. Median Price by City
+        </h3>
+        <div style="height: 320px;">
+          <canvas id="cityPriceChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Locality Tier Breakdown -->
+      <div class="card">
+        <h3 style="font-size: 1.15rem; color: var(--primary-900); margin-bottom: 1rem;">
+          <i class="fa-solid fa-layer-group" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+          Average Price by Locality Tier (₹ Lakhs)
+        </h3>
+        <div style="height: 320px;">
+          <canvas id="tierChart"></canvas>
+        </div>
+      </div>
+
+      <!-- BHK Price Progression -->
+      <div class="card">
+        <h3 style="font-size: 1.15rem; color: var(--primary-900); margin-bottom: 1rem;">
+          <i class="fa-solid fa-bed" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+          Price Scaling by Bedroom Count (BHK)
+        </h3>
+        <div style="height: 320px;">
+          <canvas id="bhkChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Price Per Sqft by City -->
+      <div class="card">
+        <h3 style="font-size: 1.15rem; color: var(--primary-900); margin-bottom: 1rem;">
+          <i class="fa-solid fa-chart-line" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+          Average Rate per Sq.ft (₹) by City
+        </h3>
+        <div style="height: 320px;">
+          <canvas id="ppsqftChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // 1. Initialize Leaflet Map for Indian Metros
+  const mapElement = document.getElementById('metroMap');
+  if (mapElement) {
+    const map = L.map('metroMap').setView([19.7515, 75.7139], 5);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    const cityPoints = [
+      { name: 'Mumbai', coords: [19.0760, 72.8777], avg: '₹1.62 Cr', median: '₹1.43 Cr', count: '3,056 listings', ppsqft: '₹15,890 / sqft' },
+      { name: 'Bangalore', coords: [12.9716, 77.5946], avg: '₹98.01 L', median: '₹87.57 L', count: '2,410 listings', ppsqft: '₹9,620 / sqft' },
+      { name: 'Hyderabad', coords: [17.3850, 78.4867], avg: '₹76.53 L', median: '₹68.60 L', count: '2,125 listings', ppsqft: '₹7,510 / sqft' },
+      { name: 'Pune', coords: [18.5204, 73.8567], avg: '₹88.08 L', median: '₹78.83 L', count: '2,674 listings', ppsqft: '₹8,650 / sqft' },
+      { name: 'Nagpur', coords: [21.1458, 79.0882], avg: '₹55.09 L', median: '₹48.57 L', count: '1,735 listings', ppsqft: '₹5,410 / sqft' }
+    ];
+
+    cityPoints.forEach(function (city) {
+      const marker = L.circleMarker(city.coords, {
+        color: '#1b4332',
+        fillColor: '#52b788',
+        fillOpacity: 0.85,
+        radius: 12,
+        weight: 2
+      }).addTo(map);
+
+      const popupHtml = `
+        <div style="font-family:'Plus Jakarta Sans',sans-serif; padding:4px;">
+          <h4 style="margin:0 0 4px; color:#0b2518; font-size:1rem;">${city.name}</h4>
+          <div style="font-size:0.82rem; color:#374151; line-height:1.5;">
+            <div><strong>Avg Price:</strong> ${city.avg}</div>
+            <div><strong>Median:</strong> ${city.median}</div>
+            <div><strong>Rate:</strong> ${city.ppsqft}</div>
+            <div style="color:#6b7280; font-size:0.75rem; margin-top:2px;">${city.count}</div>
+          </div>
+        </div>
+      `;
+      marker.bindPopup(popupHtml);
+    });
+  }
+
+  // 2. City Average vs Median Chart
+  const cityCtx = document.getElementById('cityPriceChart');
+  if (cityCtx) {
+    new Chart(cityCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ chart_data.cities | tojson }},
+        datasets: [
+          {
+            label: 'Average Price (₹ Lakhs)',
+            data: {{ chart_data.city_avg_lakhs | tojson }},
+            backgroundColor: '#1b4332',
+            borderRadius: 6
+          },
+          {
+            label: 'Median Price (₹ Lakhs)',
+            data: {{ chart_data.city_median_lakhs | tojson }},
+            backgroundColor: '#52b788',
+            borderRadius: 6
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: '₹ Lakhs' } }
+        }
+      }
+    });
+  }
+
+  // 3. Locality Tier Chart
+  const tierCtx = document.getElementById('tierChart');
+  if (tierCtx) {
+    new Chart(tierCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ chart_data.tiers | tojson }},
+        datasets: [{
+          label: 'Average Price (₹ Lakhs)',
+          data: {{ chart_data.tier_avg_lakhs | tojson }},
+          backgroundColor: ['#74c69d', '#2d6a4f', '#0b2518'],
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: '₹ Lakhs' } }
+        }
+      }
+    });
+  }
+
+  // 4. BHK Chart
+  const bhkCtx = document.getElementById('bhkChart');
+  if (bhkCtx) {
+    new Chart(bhkCtx, {
+      type: 'line',
+      data: {
+        labels: {{ chart_data.bhks | tojson }},
+        datasets: [{
+          label: 'Average Price (₹ Lakhs)',
+          data: {{ chart_data.bhk_avg_lakhs | tojson }},
+          borderColor: '#1b4332',
+          backgroundColor: 'rgba(27,67,50,0.1)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 6,
+          pointBackgroundColor: '#40916c'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: '₹ Lakhs' } }
+        }
+      }
+    });
+  }
+
+  // 5. Price Per Sqft Chart
+  const ppsqftCtx = document.getElementById('ppsqftChart');
+  if (ppsqftCtx) {
+    new Chart(ppsqftCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ chart_data.cities | tojson }},
+        datasets: [{
+          label: 'Avg Rate (₹ / sq.ft)',
+          data: {{ chart_data.city_ppsqft | tojson }},
+          backgroundColor: '#2d6a4f',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: '₹ / sq.ft' } }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

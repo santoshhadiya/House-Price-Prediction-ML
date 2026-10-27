@@ -1,0 +1,85 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Settings & Configuration — GharValue Admin{% endblock %}
+{% block page_title %}Platform Administration & Settings{% endblock %}
+
+{% block admin_content %}
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+  
+  <!-- Change Admin Password Form -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-key" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        Change Administrator Password
+      </div>
+      <span class="badge badge-primary">Security</span>
+    </div>
+    <div style="padding: 1.75rem;">
+      <form method="POST" action="{{ url_for('admin_update_password') }}">
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label" for="current_password">Current Password</label>
+          <input type="password" name="current_password" id="current_password" class="form-control" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label" for="new_password">New Password</label>
+          <input type="password" name="new_password" id="new_password" class="form-control" minlength="6" required>
+          <span style="font-size: 0.74rem; color: var(--gray-400); margin-top: 0.25rem;">Minimum 6 characters. Will be securely hashed.</span>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" for="confirm_password">Confirm New Password</label>
+          <input type="password" name="confirm_password" id="confirm_password" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="fa-solid fa-lock"></i> Update Admin Password
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Runtime Environment & Specs -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-server" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        Runtime Environment & Artifacts
+      </div>
+      <span class="badge badge-success">Healthy</span>
+    </div>
+    <div style="padding: 1.75rem; font-size: 0.88rem; line-height: 2; color: var(--gray-700);">
+      <div><strong>Python Version:</strong> <code>{{ sys_info.python_version }}</code></div>
+      <div><strong>Flask Version:</strong> <code>{{ sys_info.flask_version }}</code></div>
+      <div><strong>Scikit-Learn:</strong> <code>{{ sys_info.sklearn_version }}</code></div>
+      <div><strong>Pandas Version:</strong> <code>{{ sys_info.pandas_version }}</code></div>
+      <div><strong>Model Artifact:</strong> <code>house_price_model.pkl</code> (81.7 MB)</div>
+      <div><strong>Features Artifact:</strong> <code>house_price_features.pkl</code> (18 features)</div>
+      <div><strong>Cleaned Dataset:</strong> <code>house_price_cleaned.csv</code> (12,000 rows)</div>
+      <div><strong>Prediction History:</strong> <code>prediction_history.csv</code> (CSV storage)</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Data Operations & Backup -->
+<div class="admin-panel">
+  <div class="panel-header">
+    <div class="panel-title">
+      <i class="fa-solid fa-database" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+      Data Operations & Management
+    </div>
+    <span class="badge badge-primary">Maintenance</span>
+  </div>
+  <div style="padding: 1.75rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h4 style="font-size: 1rem; color: var(--gray-900); margin-bottom: 0.25rem;">Download Full Prediction History</h4>
+      <p style="font-size: 0.82rem; color: var(--gray-500); margin: 0;">Export all logged predictions as an offline CSV file for backup or auditing.</p>
+    </div>
+    <a href="{{ url_for('admin_export_history') }}" class="btn btn-primary">
+      <i class="fa-solid fa-download"></i> Download CSV Export
+    </a>
+  </div>
+</div>
+{% endblock %}

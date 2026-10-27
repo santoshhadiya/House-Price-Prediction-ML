@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+
+{% block title %}Compare Properties — GharValue AI{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top: 2.5rem;">
+  <div class="container compare-container">
+    <div class="section-header" style="margin-bottom: 2.5rem;">
+      <div class="section-tag">Direct Property Benchmarking</div>
+      <h1 class="section-title">Side-by-Side Property Comparison</h1>
+      <p class="section-desc">Evaluate 2 or 3 distinct property options. Each property is independently valued via the live machine learning model to reveal true market price differentials.</p>
+    </div>
+
+    <!-- Comparison Results if Submitted -->
+    {% if comparisons %}
+    <div style="margin-bottom: 3rem;">
+      <div class="card" style="margin-bottom: 2rem; border-top: 4px solid var(--primary-600);">
+        <h2 style="font-size: 1.4rem; margin-bottom: 1.5rem; color: var(--primary-900);">
+          <i class="fa-solid fa-chart-column" style="color: var(--primary-600); margin-right: 0.5rem;"></i>
+          Estimated Valuation Comparison
+        </h2>
+
+        <!-- Cards Row -->
+        <div class="compare-cards-grid">
+          {% for comp in comparisons %}
+          <div class="compare-property-card {% if loop.first %}active-card{% endif %}">
+            <div class="compare-prop-header">
+              <h3 style="font-size: 1.25rem; color: var(--primary-900);">
+                Property {{ loop.index }}
+              </h3>
+              <span class="badge badge-primary">{{ comp.house.City }} • {{ comp.house.Locality_Tier }}</span>
+            </div>
+
+            <div class="compare-price-badge">
+              <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--gray-500); font-weight: 700;">AI Valuation</div>
+              <div class="compare-price-val">{{ comp.prediction.rupees }}</div>
+              <div style="font-size: 0.95rem; font-weight: 600; color: var(--primary-600);">{{ comp.prediction.formatted_lakhs_crores }}</div>
+            </div>
+
+            <div style="font-size: 0.85rem; color: var(--gray-600); line-height: 1.8;">
+              <div><strong>Configuration:</strong> {{ comp.house.BHK }} BHK, {{ comp.house.Bathrooms }} Bath</div>
+              <div><strong>Area:</strong> {{ comp.house.Super_Area_sqft }} sqft (Carpet: {{ comp.house.Carpet_Area_sqft }} sqft)</div>
+              <div><strong>Floor:</strong> {{ comp.house.Floor_No }} / {{ comp.house.Total_Floors }}</div>
+              <div><strong>Furnishing:</strong> {{ comp.house.Furnishing }}</div>
+              <div><strong>Price / sqft:</strong> ₹{{ '{:,.0f}'.format(comp.prediction.price_per_sqft) }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Price Difference Highlight if 2 properties -->
+        {% if comparisons|length >= 2 %}
+        <div class="alert alert-info" style="font-size: 0.95rem;">
+          <i class="fa-solid fa-scale-balanced fa-lg"></i>
+          <div>
+            <strong>Price Differential:</strong>
+            Property 1 vs Property 2 difference is
+            <strong>₹{{ '{:,.0f}'.format((comparisons[0].prediction.price - comparisons[1].prediction.price)|abs) }}</strong>
+            (approx. ₹{{ '{:.2f}'.format(((comparisons[0].prediction.price - comparisons[1].prediction.price)|abs) / 100000) }} Lakhs).
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Interactive Comparison Chart -->
+        <div style="height: 320px; margin-top: 2rem;">
+          <canvas id="compareBarChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Side-by-Side Detailed Specs Table -->
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <div style="padding: 1.25rem 1.75rem; border-bottom: 1px solid var(--gray-200); background: #f8fafc;">
+          <h3 style="font-size: 1.15rem; color: var(--gray-900);">Detailed Side-by-Side Specifications</h3>
+        </div>
+        <div class="table-responsive">
+          <table class="compare-table" style="margin: 0;">
+            <thead>
+              <tr>
+                <th style="width: 28%;">Parameter</th>
+                {% for comp in comparisons %}
+                <th>Property {{ loop.index }} ({{ comp.house.City }})</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Model Estimated Price</strong></td>
+                {% for comp in comparisons %}
+                <td><strong style="color: var(--primary-700); font-size: 1.05rem;">{{ comp.prediction.rupees }}</strong></td>
+                {% endfor %}
+              </tr>
+              <tr>
+                <td>Price per sq.ft</td>
+                {% for comp in comparisons %}
+                <td>₹{{ '{:,.0f}'.format(comp.prediction.price_per_sqft) }}</td>
+                {% endfor %}
+              </tr>
+              <tr>
+                <td>Locality Tier</td>
+                {% for comp in comparisons %}
+                <td>{{ comp.house.Locality_Tier }}</td>
+                {% endfor %}
+              </tr>
+              <tr>
+                <td>BHK & Bathrooms</td>
+                {% for comp in comparisons %}
+                <td>{{ comp.house.BHK }} BHK / {{ comp.house.Bathrooms }} Bath</td>
+                {% endfor %}
+              </tr>
+              <tr>
+                <td>Super Area / Carpet Area</td>
+                {% for comp in comparisons %}
+                <td>{{ comp.house.Super_Area_sqft }} sqft / {{ comp.house.Carpet_Area_sqft }} sqft</td>
+                {% endfor %}
+              </tr>
+              <tr>
+                <td>Floor Position</td>
+                {% for comp in comparisons %}
+                <td>Floor {{ comp.house.Floor_No }} of {{ comp.house.Total_Floors }}</td>
+                {% endfor %}
+              </tr>
+              <tr>
+                <td>Property Age</td>
+                {% for comp in comparisons %}
+                <td>{{ comp.house.Property_Age_years }} Years</td>
+                {% endfor %}
+              </tr>
+              <tr>
+                <td>Furnishing Status</td>
+                {% for comp in comparisons %}
+                <td>{{ comp.house.Furnishing }}</td>
+                {% endfor %}
+              </tr>
+              <tr>
+                <td>Parking / Lift / Gated</td>
+                {% for comp in comparisons %}
+                <td>
+                  {{ 'Yes' if comp.house.Parking == 1 else 'No' }} /
+                  {{ 'Yes' if comp.house.Lift == 1 else 'No' }} /
+                  {{ 'Yes' if comp.house.Gated_Society == 1 else 'No' }}
+                </td>
+                {% endfor %}
+              </tr>
+              <tr>
+                <td>Distance to Metro</td>
+                {% for comp in comparisons %}
+                <td>{{ comp.house.Distance_to_Metro_km }} km</td>
+                {% endfor %}
+              </tr>
+              <tr>
+                <td>Distance to City Center</td>
+                {% for comp in comparisons %}
+                <td>{{ comp.house.Distance_to_CityCenter_km }} km</td>
+                {% endfor %}
+              </tr>
+              <tr>
+                <td>Nearby School / Hospital</td>
+                {% for comp in comparisons %}
+                <td>{{ comp.house.Nearby_School_km }} km / {{ comp.house.Nearby_Hospital_km }} km</td>
+                {% endfor %}
+              </tr>
+              <tr>
+                <td>Crime Rate Index</td>
+                {% for comp in comparisons %}
+                <td>{{ comp.house.Crime_Rate_Index }} / 100</td>
+                {% endfor %}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Input Form for 2 Properties -->
+    <form method="POST" action="{{ url_for('compare') }}" class="form-card">
+      <h2 style="font-size: 1.35rem; color: var(--primary-900); margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--gray-200);">
+        Configure Properties to Compare
+      </h2>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
+        
+        <!-- Property 1 Form -->
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: var(--radius-lg); border: 1.5px solid var(--primary-200);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="font-size: 1.15rem; color: var(--primary-800);">Property Option A</h3>
+            <span class="badge badge-primary">Option 1</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">City</label>
+            <select name="p1_City" class="form-control">
+              <option value="Mumbai" selected>Mumbai</option>
+              <option value="Bangalore">Bangalore</option>
+              <option value="Hyderabad">Hyderabad</option>
+              <option value="Pune">Pune</option>
+              <option value="Nagpur">Nagpur</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Locality Tier</label>
+            <select name="p1_Locality_Tier" class="form-control">
+              <option value="Budget">Budget</option>
+              <option value="Mid" selected>Mid</option>
+              <option value="Premium">Premium</option>
+            </select>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+            <div class="form-group">
+              <label class="form-label">BHK</label>
+              <select name="p1_BHK" class="form-control">
+                <option value="1">1 BHK</option>
+                <option value="2" selected>2 BHK</option>
+                <option value="3">3 BHK</option>
+                <option value="4">4 BHK</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Bathrooms</label>
+              <select name="p1_Bathrooms" class="form-control">
+                <option value="1">1</option>
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+            <div class="form-group">
+              <label class="form-label">Super Area (sqft)</label>
+              <input type="number" name="p1_Super_Area_sqft" value="1200" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Carpet Area (sqft)</label>
+              <input type="number" name="p1_Carpet_Area_sqft" value="1000" class="form-control" required>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+            <div class="form-group">
+              <label class="form-label">Floor No</label>
+              <input type="number" name="p1_Floor_No" value="5" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total Floors</label>
+              <input type="number" name="p1_Total_Floors" value="18" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Furnishing</label>
+            <select name="p1_Furnishing" class="form-control">
+              <option value="Unfurnished">Unfurnished</option>
+              <option value="Semi-Furnished" selected>Semi-Furnished</option>
+              <option value="Fully-Furnished">Fully-Furnished</option>
+            </select>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+            <div class="form-group">
+              <label class="form-label">Property Age</label>
+              <input type="number" name="p1_Property_Age_years" value="4" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Parking</label>
+              <select name="p1_Parking" class="form-control">
+                <option value="1" selected>Yes</option>
+                <option value="0">No</option>
+              </select>
+            </div>
+          </div>
+
+          <input type="hidden" name="p1_Lift" value="1">
+          <input type="hidden" name="p1_Gated_Society" value="1">
+          <input type="hidden" name="p1_Distance_to_Metro_km" value="1.5">
+          <input type="hidden" name="p1_Distance_to_CityCenter_km" value="8.0">
+          <input type="hidden" name="p1_Nearby_School_km" value="1.2">
+          <input type="hidden" name="p1_Nearby_Hospital_km" value="1.8">
+          <input type="hidden" name="p1_Crime_Rate_Index" value="28.0">
+        </div>
+
+        <!-- Property 2 Form -->
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: var(--radius-lg); border: 1.5px solid var(--primary-200);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="font-size: 1.15rem; color: var(--primary-800);">Property Option B</h3>
+            <span class="badge badge-primary">Option 2</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">City</label>
+            <select name="p2_City" class="form-control">
+              <option value="Mumbai">Mumbai</option>
+              <option value="Bangalore" selected>Bangalore</option>
+              <option value="Hyderabad">Hyderabad</option>
+              <option value="Pune">Pune</option>
+              <option value="Nagpur">Nagpur</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Locality Tier</label>
+            <select name="p2_Locality_Tier" class="form-control">
+              <option value="Budget">Budget</option>
+              <option value="Mid">Mid</option>
+              <option value="Premium" selected>Premium</option>
+            </select>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+            <div class="form-group">
+              <label class="form-label">BHK</label>
+              <select name="p2_BHK" class="form-control">
+                <option value="1">1 BHK</option>
+                <option value="2" selected>2 BHK</option>
+                <option value="3" selected>3 BHK</option>
+                <option value="4">4 BHK</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Bathrooms</label>
+              <select name="p2_Bathrooms" class="form-control">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+            <div class="form-group">
+              <label class="form-label">Super Area (sqft)</label>
+              <input type="number" name="p2_Super_Area_sqft" value="1650" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Carpet Area (sqft)</label>
+              <input type="number" name="p2_Carpet_Area_sqft" value="1350" class="form-control" required>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+            <div class="form-group">
+              <label class="form-label">Floor No</label>
+              <input type="number" name="p2_Floor_No" value="8" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total Floors</label>
+              <input type="number" name="p2_Total_Floors" value="22" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Furnishing</label>
+            <select name="p2_Furnishing" class="form-control">
+              <option value="Unfurnished">Unfurnished</option>
+              <option value="Semi-Furnished">Semi-Furnished</option>
+              <option value="Fully-Furnished" selected>Fully-Furnished</option>
+            </select>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+            <div class="form-group">
+              <label class="form-label">Property Age</label>
+              <input type="number" name="p2_Property_Age_years" value="2" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Parking</label>
+              <select name="p2_Parking" class="form-control">
+                <option value="1" selected>Yes</option>
+                <option value="0">No</option>
+              </select>
+            </div>
+          </div>
+
+          <input type="hidden" name="p2_Lift" value="1">
+          <input type="hidden" name="p2_Gated_Society" value="1">
+          <input type="hidden" name="p2_Distance_to_Metro_km" value="0.8">
+          <input type="hidden" name="p2_Distance_to_CityCenter_km" value="5.0">
+          <input type="hidden" name="p2_Nearby_School_km" value="0.9">
+          <input type="hidden" name="p2_Nearby_Hospital_km" value="1.5">
+          <input type="hidden" name="p2_Crime_Rate_Index" value="22.0">
+        </div>
+
+      </div>
+
+      <div style="margin-top: 2rem;">
+        <button type="submit" class="btn btn-primary btn-lg btn-block" style="padding: 1rem;">
+          <i class="fa-solid fa-code-compare"></i> Compare Model Valuations
+        </button>
+      </div>
+    </form>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if comparisons %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ctx = document.getElementById('compareBarChart');
+  if (ctx) {
+    const labels = [{% for comp in comparisons %}"Property {{ loop.index }} ({{ comp.house.City }})",{% endfor %}];
+    const pricesLakhs = [{% for comp in comparisons %}{{ (comp.prediction.price / 100000) | round(2) }},{% endfor %}];
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Estimated Valuation (₹ Lakhs)',
+          data: pricesLakhs,
+          backgroundColor: ['#1b4332', '#40916c', '#74c69d'],
+          borderColor: '#0b2518',
+          borderWidth: 1,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                return 'Estimated: ₹' + context.parsed.y.toLocaleString('en-IN') + ' Lakhs';
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Price (₹ Lakhs)' }
+          }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endif %}
+{% endblock %}

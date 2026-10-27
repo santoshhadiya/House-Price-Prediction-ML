@@ -1,0 +1,268 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}ML Models & Verification — GharValue Admin{% endblock %}
+{% block page_title %}Machine Learning Model Architecture & Performance{% endblock %}
+
+{% block admin_content %}
+<!-- Metrics Explanation Cards -->
+<div class="kpi-grid">
+  <div class="kpi-card" style="border-left-color: var(--accent-gold);">
+    <div class="kpi-header">
+      <span class="kpi-title">R² Score (Coefficient of Determination)</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-bullseye"></i></div>
+    </div>
+    <div class="kpi-value">0.9856</div>
+    <div class="kpi-subtext"><strong>Closer to 1.0 is better.</strong> Explains 98.56% of total price variance.</div>
+  </div>
+
+  <div class="kpi-card" style="border-left-color: var(--primary-600);">
+    <div class="kpi-header">
+      <span class="kpi-title">MAE (Mean Absolute Error)</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-ruler"></i></div>
+    </div>
+    <div class="kpi-value">₹5.81 Lakh</div>
+    <div class="kpi-subtext"><strong>Lower is better.</strong> Average absolute error across test set.</div>
+  </div>
+
+  <div class="kpi-card" style="border-left-color: var(--primary-500);">
+    <div class="kpi-header">
+      <span class="kpi-title">RMSE (Root Mean Squared Error)</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-chart-line"></i></div>
+    </div>
+    <div class="kpi-value">₹8.00 Lakh</div>
+    <div class="kpi-subtext"><strong>Lower is better.</strong> Penalizes large outliers more heavily.</div>
+  </div>
+
+  <div class="kpi-card" style="border-left-color: var(--primary-400);">
+    <div class="kpi-header">
+      <span class="kpi-title">Active Algorithm</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-brain"></i></div>
+    </div>
+    <div class="kpi-value" style="font-size: 1.45rem;">Random Forest</div>
+    <div class="kpi-subtext">100 Trees, max_depth=20, n_jobs=-1</div>
+  </div>
+</div>
+
+<!-- Model Leaderboard Table -->
+<div class="admin-panel">
+  <div class="panel-header">
+    <div class="panel-title">
+      <i class="fa-solid fa-trophy" style="color: var(--accent-gold); margin-right: 0.4rem;"></i>
+      Evaluation Leaderboard (Verified 20% Test Split)
+    </div>
+    <span class="badge badge-primary">Reproduced from House Price Prediction.ipynb</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Algorithm Rank & Name</th>
+          <th>MAE (₹ Lakhs) <span style="font-weight: normal; font-size: 0.75rem;">(↓ better)</span></th>
+          <th>RMSE (₹ Lakhs) <span style="font-weight: normal; font-size: 0.75rem;">(↓ better)</span></th>
+          <th>R² Score <span style="font-weight: normal; font-size: 0.75rem;">(↑ better)</span></th>
+          <th>Variance Explained</th>
+          <th>Deployment Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background-color: var(--primary-50); font-weight: 600;">
+          <td>
+            <i class="fa-solid fa-medal" style="color: var(--accent-gold); margin-right: 0.5rem;"></i>
+            <strong>Random Forest Regressor</strong>
+          </td>
+          <td><strong>₹5.8133 L</strong></td>
+          <td><strong>₹8.0011 L</strong></td>
+          <td><span class="badge badge-success">0.9856</span></td>
+          <td>98.56%</td>
+          <td><span class="badge badge-primary"><i class="fa-solid fa-check"></i> Active Production Model</span></td>
+        </tr>
+        <tr>
+          <td>
+            <i class="fa-solid fa-medal" style="color: #94a3b8; margin-right: 0.5rem;"></i>
+            Gradient Boosting Regressor
+          </td>
+          <td>₹5.8162 L</td>
+          <td>₹8.0565 L</td>
+          <td><span class="badge badge-success">0.9854</span></td>
+          <td>98.54%</td>
+          <td><span class="badge badge-gray">Benchmark Candidate</span></td>
+        </tr>
+        <tr>
+          <td>
+            <i class="fa-solid fa-medal" style="color: #b45309; margin-right: 0.5rem;"></i>
+            Decision Tree Regressor
+          </td>
+          <td>₹7.3825 L</td>
+          <td>₹10.5030 L</td>
+          <td><span class="badge badge-info">0.9751</span></td>
+          <td>97.51%</td>
+          <td><span class="badge badge-gray">Benchmark Candidate</span></td>
+        </tr>
+        <tr>
+          <td>
+            Linear Regression Baseline
+          </td>
+          <td>₹13.2736 L</td>
+          <td>₹19.3983 L</td>
+          <td><span class="badge badge-warning">0.9152</span></td>
+          <td>91.52%</td>
+          <td><span class="badge badge-gray">Baseline Reference</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Charts Row: Model Metric Comparison & Feature Importance -->
+<div style="display: grid; grid-template-columns: 1fr 1.25fr; gap: 1.5rem; margin-bottom: 2rem;">
+  
+  <!-- Model MAE Comparison Bar Chart -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">Model Error Comparison (MAE)</div>
+      <span class="badge badge-primary">Lower is Better</span>
+    </div>
+    <div style="padding: 1.5rem; height: 380px;">
+      <canvas id="modelCompChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Dynamic Feature Importance from Saved Model -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-chart-bar" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        Feature Importance (Trained Random Forest)
+      </div>
+      <span class="badge badge-success">Live from house_price_model.pkl</span>
+    </div>
+    <div style="padding: 1.5rem; height: 380px;">
+      <canvas id="featureImportanceChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- Pipeline Architecture Flow -->
+<div class="admin-panel">
+  <div class="panel-header">
+    <div class="panel-title">Scikit-Learn Preprocessing & Regressor Pipeline</div>
+    <span class="badge badge-primary">Architecture Spec</span>
+  </div>
+  <div style="padding: 1.75rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-lg); padding: 1.25rem;">
+        <h4 style="font-size: 1rem; color: var(--primary-800); margin-bottom: 0.5rem;">
+          <i class="fa-solid fa-filter"></i> 1. Numeric Transformation
+        </h4>
+        <p style="font-size: 0.82rem; color: var(--gray-600); margin-bottom: 0.5rem;">
+          <strong>Strategy:</strong> SimpleImputer(strategy='median')
+        </p>
+        <p style="font-size: 0.78rem; color: var(--gray-500); line-height: 1.6; margin: 0;">
+          15 continuous and discrete features: BHK, Bathrooms, Super_Area_sqft, Carpet_Area_sqft, Floor_No, Total_Floors, Property_Age_years, Parking, Lift, Gated_Society, Distance_to_Metro_km, Distance_to_CityCenter_km, Nearby_School_km, Nearby_Hospital_km, Crime_Rate_Index.
+        </p>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-lg); padding: 1.25rem;">
+        <h4 style="font-size: 1rem; color: var(--primary-800); margin-bottom: 0.5rem;">
+          <i class="fa-solid fa-tags"></i> 2. Categorical Encoding
+        </h4>
+        <p style="font-size: 0.82rem; color: var(--gray-600); margin-bottom: 0.5rem;">
+          <strong>Strategy:</strong> SimpleImputer(most_frequent) + OneHotEncoder(handle_unknown='ignore')
+        </p>
+        <p style="font-size: 0.78rem; color: var(--gray-500); line-height: 1.6; margin: 0;">
+          3 multi-class categorical features: City (5 one-hot columns), Locality_Tier (3 one-hot columns), Furnishing (3 one-hot columns). Expands to 11 encoded features.
+        </p>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-lg); padding: 1.25rem;">
+        <h4 style="font-size: 1rem; color: var(--primary-800); margin-bottom: 0.5rem;">
+          <i class="fa-solid fa-network-wired"></i> 3. Random Forest Regressor
+        </h4>
+        <p style="font-size: 0.82rem; color: var(--gray-600); margin-bottom: 0.5rem;">
+          <strong>Hyperparameters:</strong> n_estimators=100, max_depth=20, random_state=42
+        </p>
+        <p style="font-size: 0.78rem; color: var(--gray-500); line-height: 1.6; margin: 0;">
+          Trained on 26 total features (15 numeric + 11 one-hot). Predicts continuous market price in INR with high fidelity (0.9856 R² on unseen holdout test split).
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // 1. Model MAE Comparison Bar Chart
+  const modelCtx = document.getElementById('modelCompChart');
+  if (modelCtx) {
+    new Chart(modelCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Random Forest', 'Gradient Boosting', 'Decision Tree', 'Linear Regression'],
+        datasets: [{
+          label: 'MAE (₹ Lakhs) - Lower is Better',
+          data: [5.81, 5.82, 7.38, 13.27],
+          backgroundColor: ['#1b4332', '#40916c', '#74c69d', '#d97706'],
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function (ctx) {
+                return 'MAE: ₹' + ctx.parsed.y + ' Lakhs';
+              }
+            }
+          }
+        },
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'MAE (₹ Lakhs)' } }
+        }
+      }
+    });
+  }
+
+  // 2. Feature Importance Horizontal Bar Chart
+  const fiCtx = document.getElementById('featureImportanceChart');
+  if (fiCtx) {
+    new Chart(fiCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ feature_importances.names | tojson }},
+        datasets: [{
+          label: 'Relative Feature Importance (%)',
+          data: {{ feature_importances.importance_scores | tojson }},
+          backgroundColor: '#1b4332',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function (ctx) {
+                return 'Importance: ' + ctx.parsed.x.toFixed(2) + '%';
+              }
+            }
+          }
+        },
+        scales: {
+          x: { beginAtZero: true, title: { display: true, text: 'Importance Weight (%)' } }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

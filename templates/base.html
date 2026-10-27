@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}GharValue AI - India Real Estate Price Prediction & Analytics{% endblock %}</title>
+  <meta name="description" content="AI-powered residential property valuation platform for Indian real estate. Estimate home prices across Mumbai, Bangalore, Pune, Hyderabad, and Nagpur using machine learning.">
+  
+  <!-- Favicon / Logo -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/logo.svg') }}">
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Leaflet CSS & JS for India City Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header class="site-header" id="siteHeader">
+    <div class="container">
+      <nav class="navbar">
+        <a href="{{ url_for('home') }}" class="brand-logo" id="navBrandLogo">
+          <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="GharValue AI">
+          <span>GharValue<span class="text-forest">AI</span></span>
+          <span class="brand-badge">India Metros</span>
+        </a>
+
+        <ul class="nav-links" id="navLinks">
+          <li><a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">Home</a></li>
+          <li><a href="{{ url_for('predict') }}" class="nav-link {% if request.endpoint == 'predict' %}active{% endif %}">Predict Price</a></li>
+          <li><a href="{{ url_for('compare') }}" class="nav-link {% if request.endpoint == 'compare' %}active{% endif %}">Compare Properties</a></li>
+          <li><a href="{{ url_for('market') }}" class="nav-link {% if request.endpoint == 'market' %}active{% endif %}">Market Explorer</a></li>
+        </ul>
+
+        <div class="nav-actions">
+          <a href="{{ url_for('predict') }}" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-calculator"></i> Predict Now
+          </a>
+          <a href="{{ url_for('admin_dashboard') }}" class="btn-admin-nav" title="Admin Portal">
+            <i class="fa-solid fa-shield-halved"></i> Admin Portal
+          </a>
+        </div>
+
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">
+          <i class="fa-solid fa-bars fa-lg"></i>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="container" style="margin-top: 1.5rem;">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+            <i class="fa-solid {{ 'fa-triangle-exclamation' if category == 'error' else 'fa-circle-check' }}"></i>
+            <span>{{ message }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Main Content -->
+  <main id="mainContent">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Professional Real Estate Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>
+            <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="" style="width: 28px; height: 28px;">
+            GharValue AI
+          </h3>
+          <p>Next-generation residential real estate intelligence for India. Utilizing machine learning models trained on verified multi-metro property transactions to deliver accurate property price estimations and market analytics.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Platform</h4>
+          <ul class="footer-links">
+            <li><a href="{{ url_for('home') }}">Home Overview</a></li>
+            <li><a href="{{ url_for('predict') }}">Valuation Engine</a></li>
+            <li><a href="{{ url_for('compare') }}">Property Comparison</a></li>
+            <li><a href="{{ url_for('market') }}">Market Explorer</a></li>
+            <li><a href="{{ url_for('admin_login') }}">Admin Console</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Supported Metros</h4>
+          <ul class="footer-links">
+            <li><a href="{{ url_for('market') }}?city=Mumbai">Mumbai Metropolitan</a></li>
+            <li><a href="{{ url_for('market') }}?city=Bangalore">Bangalore Urban</a></li>
+            <li><a href="{{ url_for('market') }}?city=Hyderabad">Hyderabad Cyberabad</a></li>
+            <li><a href="{{ url_for('market') }}?city=Pune">Pune Tech Corridor</a></li>
+            <li><a href="{{ url_for('market') }}?city=Nagpur">Nagpur Smart City</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Model & Data Specs</h4>
+          <p style="font-size: 0.85rem; color: #9ca3af; margin-bottom: 0.5rem;">
+            <strong>Dataset:</strong> 12,000 verified property records across 18 features.<br>
+            <strong>Best Model:</strong> Random Forest Regressor (R² = 0.9856, MAE = ₹5.81L).
+          </p>
+          <div style="margin-top: 1rem;">
+            <span class="badge badge-primary">Model Version 1.0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>
+          &copy; {{ now.year if now else '2026' }} GharValue AI Platform. All rights reserved.
+        </div>
+        <div style="color: #6b7280; font-size: 0.78rem;">
+          Disclaimer: Valuations are algorithmically computed estimates based on historical machine learning training data and do not constitute an official certified bank appraisal.
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Main JavaScript -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

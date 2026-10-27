@@ -1,0 +1,157 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Price Predictor</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 30px 16px;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #202938;
+        }
+        .container {
+            max-width: 850px;
+            margin: auto;
+            background: white;
+            padding: 28px;
+            border-radius: 14px;
+            box-shadow: 0 5px 25px #0000000d;
+        }
+        h1 { margin-top: 0; }
+        .subtitle { color: #687386; margin-bottom: 25px; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+        input, select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #d5dbe5;
+            border-radius: 7px;
+            background: white;
+            font-size: 15px;
+        }
+        button {
+            width: 100%;
+            margin-top: 24px;
+            padding: 14px;
+            background: #2563eb;
+            color: white;
+            border: 0;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .result {
+            margin-top: 22px;
+            padding: 18px;
+            background: #ecfdf5;
+            border-radius: 8px;
+            color: #065f46;
+        }
+        .error { color: #b91c1c; margin-top: 18px; }
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+            .container { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>House Price Predictor</h1>
+    <p class="subtitle">Enter property details to estimate its market price.</p>
+
+    <form method="POST">
+        <div class="grid">
+            <div>
+                <label>City</label>
+                <select name="City" required>
+                    <option value="Mumbai">Mumbai</option>
+                    <option value="Bangalore">Bangalore</option>
+                    <option value="Hyderabad">Hyderabad</option>
+                    <option value="Pune">Pune</option>
+                    <option value="Nagpur">Nagpur</option>
+                </select>
+            </div>
+            <div>
+                <label>Locality Tier</label>
+                <select name="Locality_Tier" required>
+                    <option value="Budget">Budget</option>
+                    <option value="Mid">Mid</option>
+                    <option value="Premium">Premium</option>
+                </select>
+            </div>
+
+            <div><label>BHK</label><input type="number" name="BHK" min="1" max="20" value="2" required></div>
+            <div><label>Bathrooms</label><input type="number" name="Bathrooms" min="1" max="20" value="2" required></div>
+            <div><label>Super Area (sqft)</label><input type="number" name="Super_Area_sqft" min="1" step="any" value="1200" required></div>
+            <div><label>Carpet Area (sqft)</label><input type="number" name="Carpet_Area_sqft" min="1" step="any" value="1000" required></div>
+            <div><label>Floor Number</label><input type="number" name="Floor_No" min="0" value="2" required></div>
+            <div><label>Total Floors</label><input type="number" name="Total_Floors" min="1" value="10" required></div>
+            <div><label>Property Age (years)</label><input type="number" name="Property_Age_years" min="0" value="5" required></div>
+
+            <div>
+                <label>Parking</label>
+				<select name="Parking">
+    <option value="1">Yes</option>
+    <option value="0">No</option>
+</select>
+            </div>
+            <div>
+                <label>Furnishing</label>
+                <select name="Furnishing">
+    <option value="Unfurnished">Unfurnished</option>
+    <option value="Semi-Furnished">Semi-Furnished</option>
+    <option value="Fully-Furnished">Fully-Furnished</option>
+</select>
+            </div>
+            <div>
+                <label>Lift</label>
+                <select name="Lift">
+    <option value="1">Yes</option>
+    <option value="0">No</option>
+</select>
+            </div>
+            <div>
+                <label>Gated Society</label>
+<select name="Gated_Society">
+    <option value="1">Yes</option>
+    <option value="0">No</option>
+</select>
+            </div>
+            <div><label>Distance to Metro (km)</label><input type="number" name="Distance_to_Metro_km" min="0" step="any" value="2" required></div>
+            <div><label>Distance to City Center (km)</label><input type="number" name="Distance_to_CityCenter_km" min="0" step="any" value="5" required></div>
+            <div><label>Distance to School (km)</label><input type="number" name="Nearby_School_km" min="0" step="any" value="1" required></div>
+            <div><label>Distance to Hospital (km)</label><input type="number" name="Nearby_Hospital_km" min="0" step="any" value="2" required></div>
+            <div><label>Crime Rate Index</label><input type="number" name="Crime_Rate_Index" min="0" step="any" value="30" required></div>
+        </div>
+
+        <button type="submit">Predict House Price</button>
+    </form>
+
+    {% if prediction %}
+    <div class="result">
+        <h2>Estimated Price: {{ prediction.rupees }}</h2>
+        <p>{{ prediction.lakhs }}</p>
+        <small>This is an ML estimate, not a guaranteed market valuation.</small>
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <p class="error">{{ error }}</p>
+    {% endif %}
+</div>
+</body>
+</html>
