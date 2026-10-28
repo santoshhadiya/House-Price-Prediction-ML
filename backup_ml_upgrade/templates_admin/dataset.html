@@ -1,0 +1,289 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Dataset Analytics — GharValue Admin{% endblock %}
+{% block page_title %}Dataset Statistical Analytics{% endblock %}
+
+{% block admin_content %}
+<!-- Dataset Summary Cards -->
+<div class="kpi-grid">
+  <div class="kpi-card" style="border-left-color: var(--primary-700);">
+    <div class="kpi-header">
+      <span class="kpi-title">Total Records</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-table-list"></i></div>
+    </div>
+    <div class="kpi-value">12,000</div>
+    <div class="kpi-subtext">Source: house_price_cleaned.csv</div>
+  </div>
+
+  <div class="kpi-card" style="border-left-color: var(--primary-600);">
+    <div class="kpi-header">
+      <span class="kpi-title">Data Completeness</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-circle-check"></i></div>
+    </div>
+    <div class="kpi-value">100.0%</div>
+    <div class="kpi-subtext">0 missing values across all columns</div>
+  </div>
+
+  <div class="kpi-card" style="border-left-color: var(--primary-500);">
+    <div class="kpi-header">
+      <span class="kpi-title">Price Range</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-arrows-left-right"></i></div>
+    </div>
+    <div class="kpi-value" style="font-size: 1.4rem;">₹13.56L - ₹5.76Cr</div>
+    <div class="kpi-subtext">Min: ₹13,56,119 | Max: ₹5,75,52,829</div>
+  </div>
+
+  <div class="kpi-card" style="border-left-color: var(--primary-400);">
+    <div class="kpi-header">
+      <span class="kpi-title">Average Area</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-vector-square"></i></div>
+    </div>
+    <div class="kpi-value">1,018 sqft</div>
+    <div class="kpi-subtext">Median: 950.5 sqft</div>
+  </div>
+</div>
+
+<!-- Charts Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  
+  <!-- Price Distribution Histogram -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-chart-column" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        Price Distribution Brackets (₹ Lakhs)
+      </div>
+      <span class="badge badge-primary">Histogram</span>
+    </div>
+    <div style="padding: 1.5rem; height: 320px;">
+      <canvas id="priceDistChart"></canvas>
+    </div>
+  </div>
+
+  <!-- City-wise Median Price -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-city" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        City-Wise Median Price (₹ Lakhs)
+      </div>
+      <span class="badge badge-primary">Central Tendency</span>
+    </div>
+    <div style="padding: 1.5rem; height: 320px;">
+      <canvas id="cityMedianChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Average Price by BHK -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-bed" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        Average Price by Bedroom Count (BHK)
+      </div>
+      <span class="badge badge-primary">BHK Scaling</span>
+    </div>
+    <div style="padding: 1.5rem; height: 320px;">
+      <canvas id="bhkAvgChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Property Age vs Average Price -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-hourglass-half" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        Property Age vs. Average Price (₹ Lakhs)
+      </div>
+      <span class="badge badge-primary">Depreciation Curve</span>
+    </div>
+    <div style="padding: 1.5rem; height: 320px;">
+      <canvas id="agePriceChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- Data Quality & Correlation Table Row -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+  
+  <!-- Correlation Matrix Table -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-arrow-trend-up" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        Top Feature Correlations with Price
+      </div>
+      <span class="badge badge-primary">Pearson r</span>
+    </div>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Numeric Feature</th>
+            <th>Correlation (r)</th>
+            <th>Impact Significance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for feat, corr in correlations %}
+          <tr>
+            <td><strong>{{ feat }}</strong></td>
+            <td><code>{{ '{:+.4f}'.format(corr) }}</code></td>
+            <td>
+              {% if corr > 0.5 %}
+                <span class="badge badge-success">Strong Positive</span>
+              {% elif corr > 0.2 %}
+                <span class="badge badge-primary">Moderate Positive</span>
+              {% elif corr < -0.2 %}
+                <span class="badge badge-warning">Moderate Negative</span>
+              {% else %}
+                <span class="badge badge-gray">Subtle</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Data Quality / Missing Value Verification -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-shield-virus" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        Dataset Health & Integrity Verification
+      </div>
+      <span class="badge badge-success">Clean State</span>
+    </div>
+    <div style="padding: 1.5rem;">
+      <div class="alert alert-success" style="margin-bottom: 1.25rem;">
+        <i class="fa-solid fa-circle-check fa-lg"></i>
+        <div>
+          <strong>Integrity Check Passed:</strong> 12,000 / 12,000 records have zero missing values across all 20 columns.
+        </div>
+      </div>
+
+      <div style="font-size: 0.85rem; color: var(--gray-700); line-height: 1.8;">
+        <div><strong>Dataset Clean File:</strong> <code>house_price_cleaned.csv</code></div>
+        <div><strong>Raw Training File:</strong> <code>house_price_dataset_india_12k.csv</code></div>
+        <div><strong>Total Features:</strong> 18 Predictors + 2 Target Variables</div>
+        <div><strong>Categorical Dimensions:</strong> City (5), Locality_Tier (3), Furnishing (3)</div>
+        <div><strong>Target Variables:</strong> Market_Price_INR, Price_Lakhs</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // 1. Price Distribution Chart
+  const priceCtx = document.getElementById('priceDistChart');
+  if (priceCtx) {
+    new Chart(priceCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ dataset_charts.price_bins | tojson }},
+        datasets: [{
+          label: 'Properties Count',
+          data: {{ dataset_charts.price_counts | tojson }},
+          backgroundColor: '#1b4332',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'Property Count' } },
+          x: { title: { display: true, text: 'Price Range (₹ Lakhs)' } }
+        }
+      }
+    });
+  }
+
+  // 2. City-Wise Median Chart
+  const cityMedCtx = document.getElementById('cityMedianChart');
+  if (cityMedCtx) {
+    new Chart(cityMedCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ dataset_charts.cities | tojson }},
+        datasets: [{
+          label: 'Median Price (₹ Lakhs)',
+          data: {{ dataset_charts.city_medians | tojson }},
+          backgroundColor: ['#1b4332', '#2d6a4f', '#40916c', '#52b788', '#74c69d'],
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: '₹ Lakhs' } }
+        }
+      }
+    });
+  }
+
+  // 3. BHK Avg Chart
+  const bhkCtx = document.getElementById('bhkAvgChart');
+  if (bhkCtx) {
+    new Chart(bhkCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ dataset_charts.bhks | tojson }},
+        datasets: [{
+          label: 'Average Price (₹ Lakhs)',
+          data: {{ dataset_charts.bhk_avgs | tojson }},
+          backgroundColor: '#40916c',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: '₹ Lakhs' } }
+        }
+      }
+    });
+  }
+
+  // 4. Age vs Price Chart
+  const ageCtx = document.getElementById('agePriceChart');
+  if (ageCtx) {
+    new Chart(ageCtx, {
+      type: 'line',
+      data: {
+        labels: {{ dataset_charts.age_brackets | tojson }},
+        datasets: [{
+          label: 'Average Price (₹ Lakhs)',
+          data: {{ dataset_charts.age_avgs | tojson }},
+          borderColor: '#1b4332',
+          backgroundColor: 'rgba(27,67,50,0.1)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: false, title: { display: true, text: '₹ Lakhs' } },
+          x: { title: { display: true, text: 'Property Age (Years)' } }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

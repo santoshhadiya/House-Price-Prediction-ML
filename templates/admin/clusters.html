@@ -1,0 +1,331 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Pattern Discovery & Property Clustering — GharValue Admin{% endblock %}
+{% block page_title %}Unsupervised Machine Learning: K-Means Property Clustering{% endblock %}
+
+{% block admin_content %}
+<!-- Intro Callout -->
+<div class="section-intro-card" style="border-left: 4px solid var(--accent-gold);">
+  <div style="font-size: 1.8rem; color: #b45309;"><i class="fa-solid fa-shapes"></i></div>
+  <div>
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--gray-900); margin: 0;">
+        Unsupervised Pattern Discovery: Discovering Latent Market Segments
+      </h3>
+      <span class="badge badge-primary">Unsupervised K-Means</span>
+    </div>
+    <p style="font-size: 0.84rem; color: var(--gray-700); margin: 0; line-height: 1.6;">
+      By standardizing 6 core property attributes (Super Built-Up Area, BHK, Bathrooms, Age, Price, and Distance to City Center) with <code>StandardScaler</code>, K-Means clustering partitions the 12,000-record dataset into <strong>3 natural market clusters</strong> without human labeling. These clusters objectively define Indian real estate buyer personas from entry-level urban compact units up to luxury executive estates.
+    </p>
+  </div>
+</div>
+
+<!-- Section 1: Three Natural Market Segment Profile Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  {% for cp in clustering.cluster_profiles %}
+    <div class="cluster-card" style="border-top: 4px solid {{ cp.color }};">
+      <div class="cluster-header">
+        <div>
+          <span class="badge {{ cp.badge }}" style="margin-bottom: 0.35rem;">Cluster {{ cp.rank }}</span>
+          <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--gray-900); margin: 0.25rem 0;">
+            {{ cp.name }}
+          </h3>
+          <div style="font-size: 0.78rem; color: var(--gray-500);">{{ cp.tagline }}</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 1.25rem; font-weight: 800; color: {{ cp.color }};">{{ cp.percentage }}%</div>
+          <div style="font-size: 0.7rem; color: var(--gray-500);">{{ cp.size | number_format }} Homes</div>
+        </div>
+      </div>
+
+      <!-- Core Metrics Grid -->
+      <div class="cluster-metrics-row">
+        <div class="cluster-metric-item">
+          <span class="cluster-metric-label">Avg Valuation</span>
+          <span class="cluster-metric-val" style="color: {{ cp.color }};">₹{{ cp.avg_price_lakhs }} L</span>
+          <span style="font-size: 0.7rem; color: var(--gray-500);">Med: ₹{{ cp.median_price_lakhs }}L</span>
+        </div>
+
+        <div class="cluster-metric-item">
+          <span class="cluster-metric-label">Super Built Area</span>
+          <span class="cluster-metric-val">{{ cp.avg_area_sqft }} sqft</span>
+          <span style="font-size: 0.7rem; color: var(--gray-500);">₹{{ '{:,.0f}'.format(cp.avg_price_per_sqft) }}/sqft</span>
+        </div>
+
+        <div class="cluster-metric-item">
+          <span class="cluster-metric-label">Typical Layout</span>
+          <span class="cluster-metric-val">{{ cp.avg_bhk }} BHK</span>
+          <span style="font-size: 0.7rem; color: var(--gray-500);">{{ cp.avg_bathrooms }} Bathrooms</span>
+        </div>
+
+        <div class="cluster-metric-item">
+          <span class="cluster-metric-label">Dominant Location</span>
+          <span class="cluster-metric-val">{{ cp.dominant_city }}</span>
+          <span style="font-size: 0.7rem; color: var(--gray-500);">{{ cp.dominant_tier }} Tier</span>
+        </div>
+      </div>
+
+      <!-- Strategic Actionable Advice -->
+      <div style="font-size: 0.8rem; line-height: 1.6; color: var(--gray-700);">
+        <div style="margin-bottom: 0.5rem; background: #f0fdf4; border-radius: var(--radius-sm); padding: 0.6rem; border: 1px solid #dcfce7;">
+          <strong style="color: #166534;"><i class="fa-solid fa-user-check"></i> Buyer Insight:</strong>
+          <span style="color: #14532d;">{{ cp.buyer_insight }}</span>
+        </div>
+        <div style="background: #eff6ff; border-radius: var(--radius-sm); padding: 0.6rem; border: 1px solid #dbeafe;">
+          <strong style="color: #1e40af;"><i class="fa-solid fa-hand-holding-dollar"></i> Seller Strategy:</strong>
+          <span style="color: #1e3a8a;">{{ cp.seller_insight }}</span>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<!-- Section 2: Visual Cluster Projections (PCA 2D & Area vs Price) -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  
+  <!-- 2D PCA Dimensionality Projection -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-diagram-project" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        2D PCA Dimensionality Projection
+      </div>
+      <span class="badge badge-primary">
+        Explained Variance: {{ clustering.explained_variance[0] }}% + {{ clustering.explained_variance[1] }}%
+      </span>
+    </div>
+    <div style="padding: 1.5rem; height: 350px;">
+      <canvas id="pcaClusterChart"></canvas>
+    </div>
+    <div style="padding: 0 1.5rem 1rem; font-size: 0.78rem; color: var(--gray-500);">
+      PCA captures 6 multi-dimensional property features into 2 primary orthogonal axes. Well-separated spatial clusters indicate distinct market groupings.
+    </div>
+  </div>
+
+  <!-- Area vs Market Price by Cluster -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-layer-group" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        Super Area (sqft) vs. Market Price (₹ Lakhs)
+      </div>
+      <span class="badge badge-success">Market Boundaries</span>
+    </div>
+    <div style="padding: 1.5rem; height: 350px;">
+      <canvas id="areaPriceClusterChart"></canvas>
+    </div>
+    <div style="padding: 0 1.5rem 1rem; font-size: 0.78rem; color: var(--gray-500);">
+      Clear separation along both the area axis and valuation axis demonstrates that physical size and dollar tiers naturally partition the housing stock.
+    </div>
+  </div>
+
+</div>
+
+<!-- Section 3: Mathematical Optimization (Elbow Method & Silhouette Scores) -->
+<div class="admin-panel">
+  <div class="panel-header">
+    <div class="panel-title">
+      <i class="fa-solid fa-chart-line" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+      K-Selection Optimization: Elbow Curve (Inertia) & Silhouette Scores
+    </div>
+    <span class="badge badge-primary">Empirical Validation (k=2 to 6)</span>
+  </div>
+
+  <div style="padding: 1.5rem;">
+    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; align-items: center;">
+      <div style="height: 300px;">
+        <canvas id="elbowCurveChart"></canvas>
+      </div>
+
+      <div>
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--gray-800); margin-bottom: 0.5rem;">
+          Optimal Cluster Selection Rationale (k = 3)
+        </h4>
+        <p style="font-size: 0.82rem; color: var(--gray-600); line-height: 1.6; margin-bottom: 1rem;">
+          Inertia (Within-Cluster Sum of Squares) exhibits a pronounced elbow inflection at <strong>k = 3</strong>. Beyond k = 3, marginal inertia reduction diminishes rapidly while introducing fractional over-segmentation.
+        </p>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>k Clusters</th>
+              <th>Inertia (WCSS)</th>
+              <th>Silhouette Score</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in clustering.elbow_data %}
+              <tr {% if item.k == 3 %}style="background: #f0fdf4; font-weight: 700;"{% endif %}>
+                <td><strong>k = {{ item.k }}</strong></td>
+                <td><code>{{ '{:,.1f}'.format(item.inertia) }}</code></td>
+                <td><span class="badge {% if item.k == 3 %}badge-success{% else %}badge-gray{% endif %}">{{ item.silhouette }}</span></td>
+                <td>
+                  {% if item.k == 3 %}
+                    <span class="badge badge-success"><i class="fa-solid fa-check"></i> Selected Optimal (Elbow)</span>
+                  {% else %}
+                    <span class="badge badge-gray">Evaluated</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const clusterColors = ['#0284c7', '#10b981', '#f59e0b'];
+  const clusterNames = [
+    'Cluster 1: Affordable Compact',
+    'Cluster 2: Standard Family',
+    'Cluster 3: Luxury Executive'
+  ];
+
+  // 1. 2D PCA Scatter Chart
+  const pcaCtx = document.getElementById('pcaClusterChart');
+  if (pcaCtx) {
+    const rawPca = {{ clustering.scatter_pca | tojson }};
+    const datasets = [];
+
+    // Add clusters
+    for (let c = 0; c < 3; c++) {
+      if (rawPca[c]) {
+        datasets.push({
+          label: clusterNames[c],
+          data: rawPca[c],
+          backgroundColor: clusterColors[c],
+          pointRadius: 4.5,
+          pointHoverRadius: 7
+        });
+      }
+    }
+
+    // Add Centroids
+    datasets.push({
+      label: 'Cluster Centroids',
+      data: {{ clustering.centroids_pca | tojson }},
+      backgroundColor: '#0f172a',
+      borderColor: '#ffffff',
+      borderWidth: 2,
+      pointRadius: 9,
+      pointStyle: 'triangle',
+      pointHoverRadius: 11
+    });
+
+    new Chart(pcaCtx, {
+      type: 'scatter',
+      data: { datasets: datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                return `${ctx.dataset.label}: (${ctx.parsed.x}, ${ctx.parsed.y})`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: 'PCA Component 1 (Size & Value Scaling)' } },
+          y: { title: { display: true, text: 'PCA Component 2 (Age & Proximity)' } }
+        }
+      }
+    });
+  }
+
+  // 2. Area vs Price Scatter Chart by Cluster
+  const apCtx = document.getElementById('areaPriceClusterChart');
+  if (apCtx) {
+    const rawAp = {{ clustering.scatter_area_price | tojson }};
+    const datasets = [];
+
+    for (let c = 0; c < 3; c++) {
+      if (rawAp[c]) {
+        datasets.push({
+          label: clusterNames[c],
+          data: rawAp[c],
+          backgroundColor: clusterColors[c],
+          pointRadius: 4.5,
+          pointHoverRadius: 7
+        });
+      }
+    }
+
+    new Chart(apCtx, {
+      type: 'scatter',
+      data: { datasets: datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                return `Area: ${ctx.parsed.x} sqft | Price: ₹${ctx.parsed.y}L`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Super Built-Up Area (sqft)' } },
+          y: { title: { display: true, text: 'Valuation (₹ Lakhs)' } }
+        }
+      }
+    });
+  }
+
+  // 3. Elbow Method Curve Chart
+  const elbowCtx = document.getElementById('elbowCurveChart');
+  if (elbowCtx) {
+    const elbowData = {{ clustering.elbow_data | tojson }};
+    new Chart(elbowCtx, {
+      type: 'line',
+      data: {
+        labels: elbowData.map(d => `k = ${d.k}`),
+        datasets: [{
+          label: 'Inertia (Within-Cluster Sum of Squares)',
+          data: elbowData.map(d => d.inertia),
+          borderColor: '#1b4332',
+          backgroundColor: 'rgba(27, 67, 50, 0.12)',
+          fill: true,
+          tension: 0.25,
+          pointRadius: 6,
+          pointBackgroundColor: elbowData.map(d => d.k === 3 ? '#f59e0b' : '#1b4332'),
+          pointBorderWidth: elbowData.map(d => d.k === 3 ? 3 : 1),
+          pointBorderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              afterLabel: function(ctx) {
+                const item = elbowData[ctx.dataIndex];
+                return `Silhouette Score: ${item.silhouette}`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: { title: { display: true, text: 'Inertia (WCSS)' } },
+          x: { title: { display: true, text: 'Number of Clusters (k)' } }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

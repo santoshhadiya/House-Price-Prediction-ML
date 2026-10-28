@@ -16,6 +16,7 @@ from functools import wraps
 import joblib
 import numpy as np
 import pandas as pd
+import ml_analytics
 from flask import (
     Flask,
     request,
@@ -518,30 +519,24 @@ def admin_export_history():
 @app.route("/admin/dataset")
 @admin_required
 def admin_dataset():
-    """Pandas dataset statistical analytics & distributions."""
-    correlations = []
-    if df_dataset is not None:
-        numeric_cols = df_dataset.select_dtypes(include="number").columns
-        corr_series = df_dataset[numeric_cols].corr()["Market_Price_INR"].drop(
-            ["Market_Price_INR", "Price_Lakhs", "Price_per_sqft"], errors="ignore"
-        ).sort_values(ascending=False)
-        correlations = list(corr_series.items())[:8]
+    """Exploratory Data Analysis (EDA), univariate, bivariate, correlations, and dataset statistical summary."""
+    selected_city = request.args.get("city", "All")
+    selected_tier = request.args.get("tier", "All")
+    selected_bhk = request.args.get("bhk", "All")
 
-    dataset_charts = {
-        "price_bins": ["< ₹40L", "₹40L-₹80L", "₹80L-₹1.2Cr", "₹1.2Cr-₹2Cr", "₹2Cr-₹3Cr", "> ₹3Cr"],
-        "price_counts": [1820, 4150, 3120, 1940, 720, 250],
-        "cities": ["Mumbai", "Bangalore", "Pune", "Hyderabad", "Nagpur"],
-        "city_medians": [143.15, 87.57, 78.83, 68.60, 48.57],
-        "bhks": ["1 BHK", "2 BHK", "3 BHK", "4 BHK", "5 BHK"],
-        "bhk_avgs": [46.07, 84.23, 128.87, 194.03, 285.70],
-        "age_brackets": ["0-2 Yrs", "3-5 Yrs", "6-10 Yrs", "11-15 Yrs", "15+ Yrs"],
-        "age_avgs": [112.5, 105.8, 98.2, 92.4, 84.1]
-    }
+    eda_data = ml_analytics.get_eda_analytics(
+        df_dataset,
+        selected_city=selected_city,
+        selected_tier=selected_tier,
+        selected_bhk=selected_bhk
+    )
 
     return render_template(
         "admin/dataset.html",
-        correlations=correlations,
-        dataset_charts=dataset_charts
+        eda=eda_data,
+        selected_city=selected_city,
+        selected_tier=selected_tier,
+        selected_bhk=selected_bhk
     )
 
 
@@ -576,10 +571,49 @@ def admin_market_analytics():
 @app.route("/admin/models")
 @admin_required
 def admin_models():
-    """Verified machine learning leaderboard & live feature importance."""
+    """Verified machine learning multi-algorithm benchmarking & hyperparameter tuning."""
+    force_refresh = request.args.get("refresh", "0") == "1"
+    comparison = ml_analytics.get_model_comparison(
+        df_dataset,
+        feature_names=feature_names,
+        force_recompute=force_refresh
+    )
     return render_template(
         "admin/models.html",
+        comparison=comparison,
         feature_importances=FEATURE_IMPORTANCES
+    )
+
+
+@app.route("/admin/evaluation")
+@admin_required
+def admin_evaluation():
+    """Model evaluation, regression metrics, residuals, actual vs predicted, and optional classification experiment."""
+    force_refresh = request.args.get("refresh", "0") == "1"
+    evaluation = ml_analytics.get_model_evaluation(
+        df_dataset,
+        active_model=model,
+        feature_names=feature_names,
+        force_recompute=force_refresh
+    )
+    return render_template(
+        "admin/evaluation.html",
+        evaluation=evaluation
+    )
+
+
+@app.route("/admin/clusters")
+@admin_required
+def admin_clusters():
+    """Pattern discovery & unsupervised K-Means property clustering with 2D PCA projection."""
+    force_refresh = request.args.get("refresh", "0") == "1"
+    clustering = ml_analytics.get_property_clustering(
+        df_dataset,
+        force_recompute=force_refresh
+    )
+    return render_template(
+        "admin/clusters.html",
+        clustering=clustering
     )
 
 

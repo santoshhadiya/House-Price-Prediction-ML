@@ -1,191 +1,249 @@
 {% extends "admin/base_admin.html" %}
 
-{% block title %}ML Models & Verification — GharValue Admin{% endblock %}
-{% block page_title %}Machine Learning Model Architecture & Performance{% endblock %}
+{% block title %}ML Models & Comparison — GharValue Admin{% endblock %}
+{% block page_title %}Machine Learning Multi-Algorithm Benchmarking & Leaderboard{% endblock %}
 
 {% block admin_content %}
-<!-- Metrics Explanation Cards -->
-<div class="kpi-grid">
-  <div class="kpi-card" style="border-left-color: var(--accent-gold);">
-    <div class="kpi-header">
-      <span class="kpi-title">R² Score (Coefficient of Determination)</span>
-      <div class="kpi-icon-wrap"><i class="fa-solid fa-bullseye"></i></div>
+<!-- Safety Callout -->
+<div class="alert alert-success" style="margin-bottom: 1.75rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+  <div style="display: flex; align-items: center; gap: 0.75rem;">
+    <i class="fa-solid fa-shield-halved fa-xl"></i>
+    <div>
+      <strong>Production Protection Active:</strong>
+      All benchmarking evaluations run in isolated pipelines on identical 80/20 train/test splits. The live production model (<code>house_price_model.pkl</code>) remains intact and unaffected.
     </div>
-    <div class="kpi-value">0.9856</div>
-    <div class="kpi-subtext"><strong>Closer to 1.0 is better.</strong> Explains 98.56% of total price variance.</div>
   </div>
+  <a href="{{ url_for('admin_models', refresh='1') }}" class="btn btn-secondary btn-sm">
+    <i class="fa-solid fa-arrows-rotate"></i> Re-evaluate Models
+  </a>
+</div>
 
-  <div class="kpi-card" style="border-left-color: var(--primary-600);">
-    <div class="kpi-header">
-      <span class="kpi-title">MAE (Mean Absolute Error)</span>
-      <div class="kpi-icon-wrap"><i class="fa-solid fa-ruler"></i></div>
+<!-- Best Model Champion Banner -->
+<div style="background: linear-gradient(135deg, #1b4332 0%, #0d281e 100%); color: #ffffff; border-radius: var(--radius-lg); padding: 1.75rem 2rem; margin-bottom: 2rem; box-shadow: var(--shadow-md);">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.25rem;">
+    <div>
+      <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #fbbf24; padding: 0.25rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">
+        <i class="fa-solid fa-trophy"></i> Automated Selection: Champion Algorithm
+      </div>
+      <h2 style="font-size: 1.6rem; font-weight: 800; color: #ffffff; margin-bottom: 0.5rem;">
+        {{ comparison.best_model.name }}
+      </h2>
+      <p style="font-size: 0.88rem; color: #d8f3dc; max-width: 650px; margin: 0; line-height: 1.6;">
+        {{ comparison.selection_criterion }}
+      </p>
     </div>
-    <div class="kpi-value">₹5.81 Lakh</div>
-    <div class="kpi-subtext"><strong>Lower is better.</strong> Average absolute error across test set.</div>
-  </div>
 
-  <div class="kpi-card" style="border-left-color: var(--primary-500);">
-    <div class="kpi-header">
-      <span class="kpi-title">RMSE (Root Mean Squared Error)</span>
-      <div class="kpi-icon-wrap"><i class="fa-solid fa-chart-line"></i></div>
-    </div>
-    <div class="kpi-value">₹8.00 Lakh</div>
-    <div class="kpi-subtext"><strong>Lower is better.</strong> Penalizes large outliers more heavily.</div>
-  </div>
+    <!-- Champion Metrics Badges -->
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+      <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: var(--radius-md); padding: 0.85rem 1.25rem; text-align: center; min-width: 110px;">
+        <div style="font-size: 0.72rem; color: #95d5b2; text-transform: uppercase; font-weight: 600;">Test MAE</div>
+        <div style="font-size: 1.35rem; font-weight: 800; color: #ffffff;">₹{{ comparison.best_model.mae_lakhs }} L</div>
+        <div style="font-size: 0.7rem; color: #95d5b2;">Lowest Error</div>
+      </div>
 
-  <div class="kpi-card" style="border-left-color: var(--primary-400);">
-    <div class="kpi-header">
-      <span class="kpi-title">Active Algorithm</span>
-      <div class="kpi-icon-wrap"><i class="fa-solid fa-brain"></i></div>
+      <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: var(--radius-md); padding: 0.85rem 1.25rem; text-align: center; min-width: 110px;">
+        <div style="font-size: 0.72rem; color: #95d5b2; text-transform: uppercase; font-weight: 600;">Test RMSE</div>
+        <div style="font-size: 1.35rem; font-weight: 800; color: #ffffff;">₹{{ comparison.best_model.rmse_lakhs }} L</div>
+        <div style="font-size: 0.7rem; color: #95d5b2;">Root Mean Sq</div>
+      </div>
+
+      <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: var(--radius-md); padding: 0.85rem 1.25rem; text-align: center; min-width: 110px;">
+        <div style="font-size: 0.72rem; color: #95d5b2; text-transform: uppercase; font-weight: 600;">R² Score</div>
+        <div style="font-size: 1.35rem; font-weight: 800; color: #fbbf24;">{{ comparison.best_model.r2_score }}</div>
+        <div style="font-size: 0.7rem; color: #95d5b2;">{{ '{:.2f}'.format(comparison.best_model.r2_score * 100) }}% Variance</div>
+      </div>
     </div>
-    <div class="kpi-value" style="font-size: 1.45rem;">Random Forest</div>
-    <div class="kpi-subtext">100 Trees, max_depth=20, n_jobs=-1</div>
   </div>
 </div>
 
-<!-- Model Leaderboard Table -->
+<!-- Section 1: Multi-Model Benchmark Comparison Table -->
 <div class="admin-panel">
   <div class="panel-header">
     <div class="panel-title">
-      <i class="fa-solid fa-trophy" style="color: var(--accent-gold); margin-right: 0.4rem;"></i>
-      Evaluation Leaderboard (Verified 20% Test Split)
+      <i class="fa-solid fa-ranking-star" style="color: var(--accent-gold); margin-right: 0.4rem;"></i>
+      Algorithm Benchmark Leaderboard (Identical 80/20 Test Split, 2,400 Records)
     </div>
-    <span class="badge badge-primary">Reproduced from House Price Prediction.ipynb</span>
+    <span class="badge badge-primary">Reproducible Comparison</span>
   </div>
 
   <div class="table-responsive">
     <table class="data-table">
       <thead>
         <tr>
-          <th>Algorithm Rank & Name</th>
-          <th>MAE (₹ Lakhs) <span style="font-weight: normal; font-size: 0.75rem;">(↓ better)</span></th>
-          <th>RMSE (₹ Lakhs) <span style="font-weight: normal; font-size: 0.75rem;">(↓ better)</span></th>
-          <th>R² Score <span style="font-weight: normal; font-size: 0.75rem;">(↑ better)</span></th>
-          <th>Variance Explained</th>
-          <th>Deployment Status</th>
+          <th>Algorithm & Type</th>
+          <th>Test MAE (₹ Lakhs) <span style="font-size: 0.75rem; font-weight: normal;">(↓ better)</span></th>
+          <th>Test RMSE (₹ Lakhs) <span style="font-size: 0.75rem; font-weight: normal;">(↓ better)</span></th>
+          <th>Test R² Score <span style="font-size: 0.75rem; font-weight: normal;">(↑ better)</span></th>
+          <th>Train R²</th>
+          <th>Fit Time (s)</th>
+          <th>Inference (ms)</th>
+          <th>Status</th>
         </tr>
       </thead>
       <tbody>
-        <tr style="background-color: var(--primary-50); font-weight: 600;">
-          <td>
-            <i class="fa-solid fa-medal" style="color: var(--accent-gold); margin-right: 0.5rem;"></i>
-            <strong>Random Forest Regressor</strong>
-          </td>
-          <td><strong>₹5.8133 L</strong></td>
-          <td><strong>₹8.0011 L</strong></td>
-          <td><span class="badge badge-success">0.9856</span></td>
-          <td>98.56%</td>
-          <td><span class="badge badge-primary"><i class="fa-solid fa-check"></i> Active Production Model</span></td>
-        </tr>
-        <tr>
-          <td>
-            <i class="fa-solid fa-medal" style="color: #94a3b8; margin-right: 0.5rem;"></i>
-            Gradient Boosting Regressor
-          </td>
-          <td>₹5.8162 L</td>
-          <td>₹8.0565 L</td>
-          <td><span class="badge badge-success">0.9854</span></td>
-          <td>98.54%</td>
-          <td><span class="badge badge-gray">Benchmark Candidate</span></td>
-        </tr>
-        <tr>
-          <td>
-            <i class="fa-solid fa-medal" style="color: #b45309; margin-right: 0.5rem;"></i>
-            Decision Tree Regressor
-          </td>
-          <td>₹7.3825 L</td>
-          <td>₹10.5030 L</td>
-          <td><span class="badge badge-info">0.9751</span></td>
-          <td>97.51%</td>
-          <td><span class="badge badge-gray">Benchmark Candidate</span></td>
-        </tr>
-        <tr>
-          <td>
-            Linear Regression Baseline
-          </td>
-          <td>₹13.2736 L</td>
-          <td>₹19.3983 L</td>
-          <td><span class="badge badge-warning">0.9152</span></td>
-          <td>91.52%</td>
-          <td><span class="badge badge-gray">Baseline Reference</span></td>
-        </tr>
+        {% for m in comparison.models %}
+          <tr {% if m.is_production %}style="background: #f0fdf4; font-weight: 600;"{% endif %}>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                {% if loop.index == 1 %}
+                  <i class="fa-solid fa-medal" style="color: #f59e0b; font-size: 1.1rem;"></i>
+                {% elif loop.index == 2 %}
+                  <i class="fa-solid fa-medal" style="color: #94a3b8; font-size: 1.1rem;"></i>
+                {% elif loop.index == 3 %}
+                  <i class="fa-solid fa-medal" style="color: #b45309; font-size: 1.1rem;"></i>
+                {% else %}
+                  <i class="fa-solid fa-circle-notch" style="color: var(--gray-400);"></i>
+                {% endif %}
+                <div>
+                  <strong>{{ m.name }}</strong>
+                  <div style="font-size: 0.72rem; color: var(--gray-500); font-weight: normal;">{{ m.type }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <strong style="color: var(--primary-800);">₹{{ m.mae_lakhs }} L</strong>
+              <div style="font-size: 0.7rem; color: var(--gray-500);">₹{{ '{:,.0f}'.format(m.mae_inr) }}</div>
+            </td>
+            <td>
+              <strong>₹{{ m.rmse_lakhs }} L</strong>
+              <div style="font-size: 0.7rem; color: var(--gray-500);">₹{{ '{:,.0f}'.format(m.rmse_inr) }}</div>
+            </td>
+            <td>
+              <span class="badge {% if m.r2_score >= 0.98 %}badge-success{% elif m.r2_score >= 0.95 %}badge-primary{% else %}badge-warning{% endif %}">
+                {{ m.r2_score }}
+              </span>
+            </td>
+            <td><code>{{ m.train_r2 }}</code></td>
+            <td>{{ m.train_time_sec }}s</td>
+            <td>{{ m.test_time_ms }} ms</td>
+            <td>
+              {% if m.is_production %}
+                <span class="badge badge-success"><i class="fa-solid fa-check"></i> Production Active</span>
+              {% elif loop.index == 1 %}
+                <span class="badge badge-primary"><i class="fa-solid fa-star"></i> Benchmark Best</span>
+              {% else %}
+                <span class="badge badge-gray">Benchmark Candidate</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
 
-<!-- Charts Row: Model Metric Comparison & Feature Importance -->
-<div style="display: grid; grid-template-columns: 1fr 1.25fr; gap: 1.5rem; margin-bottom: 2rem;">
+<!-- Section 2: Comparison Charts Row -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
   
-  <!-- Model MAE Comparison Bar Chart -->
-  <div class="admin-panel" style="margin-bottom: 0;">
-    <div class="panel-header">
-      <div class="panel-title">Model Error Comparison (MAE)</div>
-      <span class="badge badge-primary">Lower is Better</span>
-    </div>
-    <div style="padding: 1.5rem; height: 380px;">
-      <canvas id="modelCompChart"></canvas>
-    </div>
-  </div>
-
-  <!-- Dynamic Feature Importance from Saved Model -->
+  <!-- MAE Comparison Chart -->
   <div class="admin-panel" style="margin-bottom: 0;">
     <div class="panel-header">
       <div class="panel-title">
-        <i class="fa-solid fa-chart-bar" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
-        Feature Importance (Trained Random Forest)
+        <i class="fa-solid fa-ruler" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        Mean Absolute Error (MAE in ₹ Lakhs)
       </div>
-      <span class="badge badge-success">Live from house_price_model.pkl</span>
+      <span class="badge badge-primary">Lower is Better</span>
     </div>
-    <div style="padding: 1.5rem; height: 380px;">
-      <canvas id="featureImportanceChart"></canvas>
+    <div style="padding: 1.5rem; height: 320px;">
+      <canvas id="maeCompChart"></canvas>
+    </div>
+  </div>
+
+  <!-- R2 Score Comparison Chart -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-bullseye" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        R² Variance Explained Score
+      </div>
+      <span class="badge badge-success">Higher is Better (Max 1.0)</span>
+    </div>
+    <div style="padding: 1.5rem; height: 320px;">
+      <canvas id="r2CompChart"></canvas>
     </div>
   </div>
 
 </div>
 
-<!-- Pipeline Architecture Flow -->
+<!-- Section 3: Hyperparameter Tuning Experiments (Random Forest) -->
 <div class="admin-panel">
   <div class="panel-header">
-    <div class="panel-title">Scikit-Learn Preprocessing & Regressor Pipeline</div>
-    <span class="badge badge-primary">Architecture Spec</span>
+    <div class="panel-title">
+      <i class="fa-solid fa-sliders" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+      Random Forest Hyperparameter Tuning Experiments
+    </div>
+    <span class="badge badge-primary">Tree Depth & Estimator Optimization</span>
   </div>
-  <div style="padding: 1.75rem;">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-lg); padding: 1.25rem;">
-        <h4 style="font-size: 1rem; color: var(--primary-800); margin-bottom: 0.5rem;">
-          <i class="fa-solid fa-filter"></i> 1. Numeric Transformation
-        </h4>
-        <p style="font-size: 0.82rem; color: var(--gray-600); margin-bottom: 0.5rem;">
-          <strong>Strategy:</strong> SimpleImputer(strategy='median')
-        </p>
-        <p style="font-size: 0.78rem; color: var(--gray-500); line-height: 1.6; margin: 0;">
-          15 continuous and discrete features: BHK, Bathrooms, Super_Area_sqft, Carpet_Area_sqft, Floor_No, Total_Floors, Property_Age_years, Parking, Lift, Gated_Society, Distance_to_Metro_km, Distance_to_CityCenter_km, Nearby_School_km, Nearby_Hospital_km, Crime_Rate_Index.
-        </p>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Configuration Tier</th>
+          <th>Trees (n_estimators)</th>
+          <th>Max Depth</th>
+          <th>Test MAE (₹ Lakhs)</th>
+          <th>Test RMSE (₹ Lakhs)</th>
+          <th>Test R²</th>
+          <th>Fit Latency</th>
+          <th>Tradeoff & Architectural Justification</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cfg in comparison.rf_tuning %}
+          <tr {% if 'Current Prod' in cfg.name %}style="background: #f0fdf4; font-weight: 600;"{% endif %}>
+            <td>
+              <strong>{{ cfg.name }}</strong>
+              {% if 'Current Prod' in cfg.name %}
+                <span class="badge badge-success" style="margin-left: 0.35rem;">Selected Production</span>
+              {% endif %}
+            </td>
+            <td>{{ cfg.trees }}</td>
+            <td>{{ cfg.depth }}</td>
+            <td>₹{{ cfg.mae_l }} L</td>
+            <td>₹{{ cfg.rmse_l }} L</td>
+            <td><span class="badge badge-success">{{ cfg.r2 }}</span></td>
+            <td>{{ cfg.train_time }}s</td>
+            <td><span style="font-size: 0.82rem; color: var(--gray-700);">{{ cfg.note }}</span></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Section 4: Live Feature Importances from Production Model -->
+<div class="admin-panel">
+  <div class="panel-header">
+    <div class="panel-title">
+      <i class="fa-solid fa-network-wired" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+      Feature Importance (Extracted Dynamically from <code>house_price_model.pkl</code>)
+    </div>
+    <span class="badge badge-success">Live Trained Model</span>
+  </div>
+
+  <div style="padding: 1.5rem;">
+    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; align-items: center;">
+      <div style="height: 340px;">
+        <canvas id="featureImportanceChart"></canvas>
       </div>
 
-      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-lg); padding: 1.25rem;">
-        <h4 style="font-size: 1rem; color: var(--primary-800); margin-bottom: 0.5rem;">
-          <i class="fa-solid fa-tags"></i> 2. Categorical Encoding
+      <div>
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--gray-800); margin-bottom: 0.5rem;">
+          Model Decision Drivers Summary
         </h4>
-        <p style="font-size: 0.82rem; color: var(--gray-600); margin-bottom: 0.5rem;">
-          <strong>Strategy:</strong> SimpleImputer(most_frequent) + OneHotEncoder(handle_unknown='ignore')
+        <p style="font-size: 0.82rem; color: var(--gray-600); line-height: 1.6; margin-bottom: 1rem;">
+          In the trained Random Forest ensemble of 100 decision trees, impurity reduction (Gini gain) is overwhelmingly dominated by the top two features:
         </p>
-        <p style="font-size: 0.78rem; color: var(--gray-500); line-height: 1.6; margin: 0;">
-          3 multi-class categorical features: City (5 one-hot columns), Locality_Tier (3 one-hot columns), Furnishing (3 one-hot columns). Expands to 11 encoded features.
-        </p>
-      </div>
 
-      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-lg); padding: 1.25rem;">
-        <h4 style="font-size: 1rem; color: var(--primary-800); margin-bottom: 0.5rem;">
-          <i class="fa-solid fa-network-wired"></i> 3. Random Forest Regressor
-        </h4>
-        <p style="font-size: 0.82rem; color: var(--gray-600); margin-bottom: 0.5rem;">
-          <strong>Hyperparameters:</strong> n_estimators=100, max_depth=20, random_state=42
-        </p>
-        <p style="font-size: 0.78rem; color: var(--gray-500); line-height: 1.6; margin: 0;">
-          Trained on 26 total features (15 numeric + 11 one-hot). Predicts continuous market price in INR with high fidelity (0.9856 R² on unseen holdout test split).
-        </p>
+        <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+          {% for name in feature_importances.names[:5] %}
+            <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-md); padding: 0.65rem 0.85rem; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.85rem; font-weight: 600;">{{ name }}</span>
+              <span class="badge badge-primary">{{ feature_importances.importance_scores[loop.index0] }}%</span>
+            </div>
+          {% endfor %}
+        </div>
       </div>
     </div>
   </div>
@@ -195,41 +253,57 @@
 {% block admin_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  // 1. Model MAE Comparison Bar Chart
-  const modelCtx = document.getElementById('modelCompChart');
-  if (modelCtx) {
-    new Chart(modelCtx, {
+  // 1. MAE Comparison Chart
+  const maeCtx = document.getElementById('maeCompChart');
+  if (maeCtx) {
+    new Chart(maeCtx, {
       type: 'bar',
       data: {
-        labels: ['Random Forest', 'Gradient Boosting', 'Decision Tree', 'Linear Regression'],
+        labels: {{ comparison.comparison_charts.names | tojson }},
         datasets: [{
-          label: 'MAE (₹ Lakhs) - Lower is Better',
-          data: [5.81, 5.82, 7.38, 13.27],
-          backgroundColor: ['#1b4332', '#40916c', '#74c69d', '#d97706'],
+          label: 'Test MAE (₹ Lakhs)',
+          data: {{ comparison.comparison_charts.mae_lakhs | tojson }},
+          backgroundColor: ['#10b981', '#1b4332', '#f59e0b', '#64748b'],
           borderRadius: 6
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: function (ctx) {
-                return 'MAE: ₹' + ctx.parsed.y + ' Lakhs';
-              }
-            }
-          }
-        },
+        plugins: { legend: { display: false } },
         scales: {
-          y: { beginAtZero: true, title: { display: true, text: 'MAE (₹ Lakhs)' } }
+          y: { beginAtZero: true, title: { display: true, text: 'MAE (₹ Lakhs) - Lower is Better' } }
         }
       }
     });
   }
 
-  // 2. Feature Importance Horizontal Bar Chart
+  // 2. R2 Score Comparison Chart
+  const r2Ctx = document.getElementById('r2CompChart');
+  if (r2Ctx) {
+    new Chart(r2Ctx, {
+      type: 'bar',
+      data: {
+        labels: {{ comparison.comparison_charts.names | tojson }},
+        datasets: [{
+          label: 'R² Score',
+          data: {{ comparison.comparison_charts.r2_scores | tojson }},
+          backgroundColor: ['#10b981', '#1b4332', '#0284c7', '#f59e0b'],
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { min: 0.85, max: 1.0, title: { display: true, text: 'R² Score (Closer to 1.0 is Better)' } }
+        }
+      }
+    });
+  }
+
+  // 3. Feature Importance Horizontal Bar Chart
   const fiCtx = document.getElementById('featureImportanceChart');
   if (fiCtx) {
     new Chart(fiCtx, {
@@ -237,28 +311,19 @@ document.addEventListener('DOMContentLoaded', function () {
       data: {
         labels: {{ feature_importances.names | tojson }},
         datasets: [{
-          label: 'Relative Feature Importance (%)',
+          label: 'Importance (%)',
           data: {{ feature_importances.importance_scores | tojson }},
           backgroundColor: '#1b4332',
-          borderRadius: 4
+          borderRadius: 6
         }]
       },
       options: {
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: function (ctx) {
-                return 'Importance: ' + ctx.parsed.x.toFixed(2) + '%';
-              }
-            }
-          }
-        },
+        plugins: { legend: { display: false } },
         scales: {
-          x: { beginAtZero: true, title: { display: true, text: 'Importance Weight (%)' } }
+          x: { beginAtZero: true, title: { display: true, text: 'Relative Importance Score (%)' } }
         }
       }
     });

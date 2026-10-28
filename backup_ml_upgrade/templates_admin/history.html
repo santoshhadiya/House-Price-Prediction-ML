@@ -1,0 +1,116 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Prediction History — GharValue Admin{% endblock %}
+{% block page_title %}Inference Logs & Prediction History{% endblock %}
+
+{% block admin_content %}
+<div class="admin-panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">Stored Prediction Records</div>
+      <p style="font-size: 0.82rem; color: var(--gray-500); margin: 0;">Backed by <code>prediction_history.csv</code> with persistent write protection.</p>
+    </div>
+
+    <div class="panel-controls">
+      <!-- Search Input -->
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="historySearch" placeholder="Search by ID, city, tier...">
+      </div>
+
+      <!-- City Filter Dropdown -->
+      <select id="historyCityFilter" class="form-control" style="width: 140px; padding: 0.45rem 0.65rem; font-size: 0.85rem;">
+        <option value="">All Cities</option>
+        <option value="Mumbai">Mumbai</option>
+        <option value="Bangalore">Bangalore</option>
+        <option value="Hyderabad">Hyderabad</option>
+        <option value="Pune">Pune</option>
+        <option value="Nagpur">Nagpur</option>
+      </select>
+
+      <!-- CSV Export Button -->
+      <a href="{{ url_for('admin_export_history') }}" class="btn btn-primary btn-sm">
+        <i class="fa-solid fa-file-export"></i> Export CSV
+      </a>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table" id="historyTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Timestamp</th>
+          <th>City</th>
+          <th>Tier</th>
+          <th>BHK</th>
+          <th>Super Area</th>
+          <th>Floor</th>
+          <th>Furnishing</th>
+          <th>Predicted (INR)</th>
+          <th>Lakhs</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if records %}
+          {% for r in records %}
+          <tr data-city="{{ r.city }}">
+            <td><code>{{ r.prediction_id }}</code></td>
+            <td style="font-size: 0.82rem; color: var(--gray-600);">{{ r.timestamp }}</td>
+            <td><strong>{{ r.city }}</strong></td>
+            <td><span class="badge badge-gray">{{ r.locality_tier }}</span></td>
+            <td>{{ r.bhk }} BHK</td>
+            <td>{{ r.super_area_sqft }} sqft</td>
+            <td>{{ r.floor_no }} / {{ r.total_floors }}</td>
+            <td>{{ r.furnishing }}</td>
+            <td><strong style="color: var(--primary-800);">₹{{ '{:,.0f}'.format(r.predicted_price_inr|float) }}</strong></td>
+            <td><span class="badge badge-success">₹{{ '{:.2f}'.format(r.predicted_price_lakhs|float) }} L</span></td>
+            <td><span class="badge badge-primary">{{ r.status or 'Completed' }}</span></td>
+            <td>
+              <button type="button" class="btn btn-secondary btn-sm" onclick='openDetailModal({{ r | tojson }})'>
+                <i class="fa-solid fa-eye"></i> View
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="12" style="text-align: center; color: var(--gray-500); padding: 3rem;">
+              <i class="fa-solid fa-inbox fa-2x" style="color: var(--gray-300); margin-bottom: 0.5rem; display: block;"></i>
+              No predictions recorded in history yet.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="padding: 1rem 1.75rem; background: #f8fafc; border-top: 1px solid var(--admin-border); display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: var(--gray-500);">
+    <div>Total Records: <strong>{{ records|length }}</strong></div>
+    <div>File storage: <code>prediction_history.csv</code></div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 style="font-size: 1.15rem; color: var(--gray-900); margin: 0;">
+        <i class="fa-solid fa-file-invoice" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        Full Prediction Specifications
+      </h3>
+      <button type="button" class="modal-close-trigger" style="background: none; border: none; font-size: 1.25rem; color: var(--gray-500); cursor: pointer;">
+        &times;
+      </button>
+    </div>
+    <div class="modal-body" id="modalDetailsBody">
+      <!-- Populated dynamically via JS -->
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary btn-sm modal-close-trigger">Close</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

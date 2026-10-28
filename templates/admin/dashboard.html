@@ -61,23 +61,41 @@
       <div class="panel-title">Administrative Modules</div>
       <span class="badge badge-primary">System Operational</span>
     </div>
-    <div style="padding: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-      <a href="{{ url_for('admin_history') }}" class="card" style="padding: 1.25rem; border-color: var(--admin-border); text-decoration: none;">
-        <div style="color: var(--primary-600); font-size: 1.3rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-file-csv"></i></div>
-        <h4 style="font-size: 1rem; color: var(--gray-900); margin-bottom: 0.25rem;">Prediction History</h4>
-        <p style="font-size: 0.78rem; color: var(--gray-500); margin: 0;">Search, inspect and export all {{ live_stats.total_predictions }} inference records.</p>
+    <div style="padding: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+      <a href="{{ url_for('admin_dataset') }}" class="card" style="padding: 1rem; border-color: var(--admin-border); text-decoration: none;">
+        <div style="color: var(--primary-600); font-size: 1.25rem; margin-bottom: 0.35rem;"><i class="fa-solid fa-chart-simple"></i></div>
+        <h4 style="font-size: 0.95rem; color: var(--gray-900); margin-bottom: 0.2rem;">Dataset Analytics / EDA</h4>
+        <p style="font-size: 0.75rem; color: var(--gray-500); margin: 0;">Univariate, bivariate, correlations & quality stats.</p>
       </a>
 
-      <a href="{{ url_for('admin_dataset') }}" class="card" style="padding: 1.25rem; border-color: var(--admin-border); text-decoration: none;">
-        <div style="color: var(--primary-600); font-size: 1.3rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-chart-column"></i></div>
-        <h4 style="font-size: 1rem; color: var(--gray-900); margin-bottom: 0.25rem;">Dataset Analytics</h4>
-        <p style="font-size: 0.78rem; color: var(--gray-500); margin: 0;">In-depth Pandas statistical distributions & correlation matrix.</p>
+      <a href="{{ url_for('admin_models') }}" class="card" style="padding: 1rem; border-color: var(--admin-border); text-decoration: none;">
+        <div style="color: var(--primary-600); font-size: 1.25rem; margin-bottom: 0.35rem;"><i class="fa-solid fa-brain"></i></div>
+        <h4 style="font-size: 0.95rem; color: var(--gray-900); margin-bottom: 0.2rem;">ML Models</h4>
+        <p style="font-size: 0.75rem; color: var(--gray-500); margin: 0;">Multi-algorithm comparison & hyperparameter tuning.</p>
       </a>
 
-      <a href="{{ url_for('admin_models') }}" class="card" style="padding: 1.25rem; border-color: var(--admin-border); text-decoration: none;">
-        <div style="color: var(--primary-600); font-size: 1.3rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-brain"></i></div>
-        <h4 style="font-size: 1rem; color: var(--gray-900); margin-bottom: 0.25rem;">ML Model Benchmarks</h4>
-        <p style="font-size: 0.78rem; color: var(--gray-500); margin: 0;">Model leaderboards, MAE/RMSE comparisons, and feature importance.</p>
+      <a href="{{ url_for('admin_evaluation') }}" class="card" style="padding: 1rem; border-color: var(--admin-border); text-decoration: none;">
+        <div style="color: var(--primary-600); font-size: 1.25rem; margin-bottom: 0.35rem;"><i class="fa-solid fa-square-poll-vertical"></i></div>
+        <h4 style="font-size: 0.95rem; color: var(--gray-900); margin-bottom: 0.2rem;">Model Evaluation</h4>
+        <p style="font-size: 0.75rem; color: var(--gray-500); margin: 0;">MAE/RMSE, residuals, actual vs predicted & classification test.</p>
+      </a>
+
+      <a href="{{ url_for('admin_clusters') }}" class="card" style="padding: 1rem; border-color: var(--admin-border); text-decoration: none;">
+        <div style="color: var(--primary-600); font-size: 1.25rem; margin-bottom: 0.35rem;"><i class="fa-solid fa-shapes"></i></div>
+        <h4 style="font-size: 0.95rem; color: var(--gray-900); margin-bottom: 0.2rem;">Pattern Discovery</h4>
+        <p style="font-size: 0.75rem; color: var(--gray-500); margin: 0;">Unsupervised K-Means clustering & PCA 2D projections.</p>
+      </a>
+
+      <a href="{{ url_for('admin_history') }}" class="card" style="padding: 1rem; border-color: var(--admin-border); text-decoration: none;">
+        <div style="color: var(--primary-600); font-size: 1.25rem; margin-bottom: 0.35rem;"><i class="fa-solid fa-file-csv"></i></div>
+        <h4 style="font-size: 0.95rem; color: var(--gray-900); margin-bottom: 0.2rem;">Prediction History</h4>
+        <p style="font-size: 0.75rem; color: var(--gray-500); margin: 0;">Search, inspect and export all CSV inference records.</p>
+      </a>
+
+      <a href="{{ url_for('admin_market_analytics') }}" class="card" style="padding: 1rem; border-color: var(--admin-border); text-decoration: none;">
+        <div style="color: var(--primary-600); font-size: 1.25rem; margin-bottom: 0.35rem;"><i class="fa-solid fa-chart-pie"></i></div>
+        <h4 style="font-size: 0.95rem; color: var(--gray-900); margin-bottom: 0.2rem;">Market Intelligence</h4>
+        <p style="font-size: 0.75rem; color: var(--gray-500); margin: 0;">Locality matrix and amenity value drivers.</p>
       </a>
     </div>
   </div>

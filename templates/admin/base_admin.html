@@ -51,23 +51,35 @@
         </a>
       </li>
 
-      <li class="nav-section-title" style="margin-top: 1rem;">Data & Analytics</li>
+      <li class="nav-section-title" style="margin-top: 1rem;">ML & Data Science</li>
       <li class="sidebar-nav-item">
         <a href="{{ url_for('admin_dataset') }}" class="sidebar-nav-link {% if request.endpoint == 'admin_dataset' %}active{% endif %}">
-          <span class="sidebar-nav-icon"><i class="fa-solid fa-database"></i></span>
-          <span>Dataset Analytics</span>
-        </a>
-      </li>
-      <li class="sidebar-nav-item">
-        <a href="{{ url_for('admin_market_analytics') }}" class="sidebar-nav-link {% if request.endpoint == 'admin_market_analytics' %}active{% endif %}">
-          <span class="sidebar-nav-icon"><i class="fa-solid fa-chart-pie"></i></span>
-          <span>Market Analytics</span>
+          <span class="sidebar-nav-icon"><i class="fa-solid fa-chart-simple"></i></span>
+          <span>Dataset Analytics / EDA</span>
         </a>
       </li>
       <li class="sidebar-nav-item">
         <a href="{{ url_for('admin_models') }}" class="sidebar-nav-link {% if request.endpoint == 'admin_models' %}active{% endif %}">
           <span class="sidebar-nav-icon"><i class="fa-solid fa-brain"></i></span>
-          <span>ML Models & Metrics</span>
+          <span>ML Models & Benchmarking</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin_evaluation') }}" class="sidebar-nav-link {% if request.endpoint == 'admin_evaluation' %}active{% endif %}">
+          <span class="sidebar-nav-icon"><i class="fa-solid fa-square-poll-vertical"></i></span>
+          <span>Model Evaluation</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin_clusters') }}" class="sidebar-nav-link {% if request.endpoint == 'admin_clusters' %}active{% endif %}">
+          <span class="sidebar-nav-icon"><i class="fa-solid fa-shapes"></i></span>
+          <span>Pattern Discovery / Clusters</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin_market_analytics') }}" class="sidebar-nav-link {% if request.endpoint == 'admin_market_analytics' %}active{% endif %}">
+          <span class="sidebar-nav-icon"><i class="fa-solid fa-chart-pie"></i></span>
+          <span>Market Intelligence</span>
         </a>
       </li>
 

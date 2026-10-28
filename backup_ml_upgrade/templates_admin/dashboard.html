@@ -1,0 +1,183 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Dashboard Overview — GharValue Admin{% endblock %}
+{% block page_title %}Platform Executive Overview{% endblock %}
+
+{% block admin_content %}
+<!-- Live KPI Metric Cards -->
+<div class="kpi-grid">
+  <div class="kpi-card" style="border-left-color: var(--primary-700);">
+    <div class="kpi-header">
+      <span class="kpi-title">Dataset Records</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-database"></i></div>
+    </div>
+    <div class="kpi-value">{{ live_stats.total_dataset_records | number_format if live_stats.total_dataset_records else '12,000' }}</div>
+    <div class="kpi-subtext">Verified multi-city transactions</div>
+  </div>
+
+  <div class="kpi-card" style="border-left-color: var(--primary-600);">
+    <div class="kpi-header">
+      <span class="kpi-title">Saved Predictions</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-clock-rotate-left"></i></div>
+    </div>
+    <div class="kpi-value">{{ live_stats.total_predictions }}</div>
+    <div class="kpi-subtext">Logged in CSV history</div>
+  </div>
+
+  <div class="kpi-card" style="border-left-color: var(--primary-500);">
+    <div class="kpi-header">
+      <span class="kpi-title">Dataset Avg Price</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+    </div>
+    <div class="kpi-value">₹{{ '{:.2f}'.format(live_stats.avg_price / 100000) }} L</div>
+    <div class="kpi-subtext">Median: ₹{{ '{:.2f}'.format(live_stats.median_price / 100000) }} Lakhs</div>
+  </div>
+
+  <div class="kpi-card" style="border-left-color: var(--primary-400);">
+    <div class="kpi-header">
+      <span class="kpi-title">Supported Metros</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-city"></i></div>
+    </div>
+    <div class="kpi-value">{{ live_stats.cities_count }}</div>
+    <div class="kpi-subtext">Mumbai, BLR, HYD, Pune, NGP</div>
+  </div>
+
+  <div class="kpi-card" style="border-left-color: var(--accent-gold);">
+    <div class="kpi-header">
+      <span class="kpi-title">Active Model Accuracy</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-trophy"></i></div>
+    </div>
+    <div class="kpi-value">98.56%</div>
+    <div class="kpi-subtext">Random Forest (R² = 0.9856)</div>
+  </div>
+</div>
+
+<!-- Quick Navigation & Health Row -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+  
+  <!-- Fast Action Cards -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">Administrative Modules</div>
+      <span class="badge badge-primary">System Operational</span>
+    </div>
+    <div style="padding: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+      <a href="{{ url_for('admin_history') }}" class="card" style="padding: 1.25rem; border-color: var(--admin-border); text-decoration: none;">
+        <div style="color: var(--primary-600); font-size: 1.3rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-file-csv"></i></div>
+        <h4 style="font-size: 1rem; color: var(--gray-900); margin-bottom: 0.25rem;">Prediction History</h4>
+        <p style="font-size: 0.78rem; color: var(--gray-500); margin: 0;">Search, inspect and export all {{ live_stats.total_predictions }} inference records.</p>
+      </a>
+
+      <a href="{{ url_for('admin_dataset') }}" class="card" style="padding: 1.25rem; border-color: var(--admin-border); text-decoration: none;">
+        <div style="color: var(--primary-600); font-size: 1.3rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-chart-column"></i></div>
+        <h4 style="font-size: 1rem; color: var(--gray-900); margin-bottom: 0.25rem;">Dataset Analytics</h4>
+        <p style="font-size: 0.78rem; color: var(--gray-500); margin: 0;">In-depth Pandas statistical distributions & correlation matrix.</p>
+      </a>
+
+      <a href="{{ url_for('admin_models') }}" class="card" style="padding: 1.25rem; border-color: var(--admin-border); text-decoration: none;">
+        <div style="color: var(--primary-600); font-size: 1.3rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-brain"></i></div>
+        <h4 style="font-size: 1rem; color: var(--gray-900); margin-bottom: 0.25rem;">ML Model Benchmarks</h4>
+        <p style="font-size: 0.78rem; color: var(--gray-500); margin: 0;">Model leaderboards, MAE/RMSE comparisons, and feature importance.</p>
+      </a>
+    </div>
+  </div>
+
+  <!-- Model Specification Card -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">Production Model</div>
+      <span class="badge badge-success">Live Pipeline</span>
+    </div>
+    <div style="padding: 1.5rem; font-size: 0.85rem; line-height: 1.8; color: var(--gray-700);">
+      <div><strong>Algorithm:</strong> Random Forest Regressor</div>
+      <div><strong>Hyperparameters:</strong> max_depth=20, n_jobs=-1</div>
+      <div><strong>Preprocessor:</strong> ColumnTransformer + OneHot</div>
+      <div><strong>Input Features:</strong> 18 Dimensions</div>
+      <div><strong>MAE:</strong> ₹5.81 Lakhs</div>
+      <div><strong>RMSE:</strong> ₹8.00 Lakhs</div>
+      <div style="margin-top: 1rem;">
+        <a href="{{ url_for('predict') }}" target="_blank" class="btn btn-primary btn-sm btn-block">
+          <i class="fa-solid fa-calculator"></i> Run Test Prediction
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Recent Prediction Logs Table -->
+<div class="admin-panel">
+  <div class="panel-header">
+    <div class="panel-title">Recent Inference Activity</div>
+    <a href="{{ url_for('admin_history') }}" class="btn btn-secondary btn-sm">
+      <i class="fa-solid fa-arrow-right"></i> View Full History
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Prediction ID</th>
+          <th>Timestamp</th>
+          <th>City</th>
+          <th>Locality Tier</th>
+          <th>Configuration</th>
+          <th>Super Area</th>
+          <th>Predicted Valuation (INR)</th>
+          <th>Lakhs</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if recent_predictions %}
+          {% for r in recent_predictions %}
+          <tr data-city="{{ r.city }}">
+            <td><code>{{ r.prediction_id }}</code></td>
+            <td>{{ r.timestamp }}</td>
+            <td><strong>{{ r.city }}</strong></td>
+            <td><span class="badge badge-gray">{{ r.locality_tier }}</span></td>
+            <td>{{ r.bhk }} BHK ({{ r.bathrooms }} Baths)</td>
+            <td>{{ r.super_area_sqft }} sqft</td>
+            <td><strong style="color: var(--primary-800);">₹{{ '{:,.0f}'.format(r.predicted_price_inr|float) }}</strong></td>
+            <td><span class="badge badge-success">₹{{ '{:.2f}'.format(r.predicted_price_lakhs|float) }} L</span></td>
+            <td>
+              <button type="button" class="btn btn-secondary btn-sm" onclick='openDetailModal({{ r | tojson }})'>
+                <i class="fa-solid fa-eye"></i> Details
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="9" style="text-align: center; color: var(--gray-500); padding: 2rem;">
+              No predictions recorded yet. Run a prediction to see live records here.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Detail Modal for Prediction Record -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 style="font-size: 1.15rem; color: var(--gray-900); margin: 0;">
+        <i class="fa-solid fa-file-invoice" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        Prediction Record Specifications
+      </h3>
+      <button type="button" class="modal-close-trigger" style="background: none; border: none; font-size: 1.25rem; color: var(--gray-500); cursor: pointer;">
+        &times;
+      </button>
+    </div>
+    <div class="modal-body" id="modalDetailsBody">
+      <!-- Populated dynamically via JS -->
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary btn-sm modal-close-trigger">Close</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

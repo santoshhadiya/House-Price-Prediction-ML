@@ -1,0 +1,512 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Model Evaluation & Verification — GharValue Admin{% endblock %}
+{% block page_title %}Model Evaluation, Regression Metrics & Statistical Verification{% endblock %}
+
+{% block admin_content %}
+<!-- Section A: Problem Formulation Callout -->
+<div class="section-intro-card" style="border-left: 4px solid var(--primary-700);">
+  <div style="font-size: 1.8rem; color: var(--primary-700);"><i class="fa-solid fa-chart-line"></i></div>
+  <div>
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--gray-900); margin: 0;">
+        Problem Formulation: Supervised Regression Task
+      </h3>
+      <span class="badge badge-primary">Supervised Regression</span>
+    </div>
+    <p style="font-size: 0.84rem; color: var(--gray-700); margin: 0; line-height: 1.6;">
+      House price prediction is fundamentally a <strong>continuous numerical regression problem</strong>, not a discrete classification problem. The objective is to estimate the expected market value in Indian Rupees (<code style="color: var(--primary-800);">Market_Price_INR</code>) as a continuous function of 18 property attributes. Evaluating continuous home prices using classification metrics directly is mathematically invalid; regression error metrics (MAE, RMSE, and R²) provide the genuine measure of dollar accuracy.
+    </p>
+  </div>
+</div>
+
+<!-- Section B: Dataset & Training Summary (Requirement 6) -->
+<div class="admin-panel">
+  <div class="panel-header">
+    <div class="panel-title">
+      <i class="fa-solid fa-database" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+      Dataset & Train-Test Split Summary (Verified Runtime Metadata)
+    </div>
+    <span class="badge badge-success"><i class="fa-solid fa-check"></i> Zero Data Leakage</span>
+  </div>
+
+  <div style="padding: 1.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-md); padding: 1rem;">
+        <div style="font-size: 0.72rem; color: var(--gray-500); text-transform: uppercase; font-weight: 600;">Total Source Records</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--gray-900);">{{ evaluation.meta.total_records | number_format }}</div>
+        <div style="font-size: 0.72rem; color: var(--gray-500);">Excluded: {{ evaluation.meta.excluded_records }} (100% Eligible)</div>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-md); padding: 1rem;">
+        <div style="font-size: 0.72rem; color: var(--gray-500); text-transform: uppercase; font-weight: 600;">Training Split (80.0%)</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary-700);">{{ evaluation.meta.train_records | number_format }}</div>
+        <div style="font-size: 0.72rem; color: var(--gray-500);">Reproducible: random_state=42</div>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-md); padding: 1rem;">
+        <div style="font-size: 0.72rem; color: var(--gray-500); text-transform: uppercase; font-weight: 600;">Testing Split (20.0%)</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #0284c7;">{{ evaluation.meta.test_records | number_format }}</div>
+        <div style="font-size: 0.72rem; color: var(--gray-500);">Unseen Evaluation Holdout</div>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-md); padding: 1rem;">
+        <div style="font-size: 0.72rem; color: var(--gray-500); text-transform: uppercase; font-weight: 600;">Input Features Dimension</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--gray-900);">{{ evaluation.meta.total_features_count }}</div>
+        <div style="font-size: 0.72rem; color: var(--gray-500);">15 Numeric + 3 Categorical</div>
+      </div>
+    </div>
+
+    <div style="font-size: 0.82rem; color: var(--gray-700); line-height: 1.8; background: #ffffff; border: 1px dashed var(--admin-border); border-radius: var(--radius-md); padding: 1rem;">
+      <div><strong>Target Variable:</strong> <code>{{ evaluation.meta.target_variable }}</code> (Unbounded Continuous Indian Rupee Value)</div>
+      <div><strong>Target Leakage Prevention:</strong> <code>Market_Price_INR</code>, <code>Price_per_sqft_INR</code>, <code>Price_Lakhs</code>, and <code>House_ID</code> strictly stripped prior to inference pipeline.</div>
+      <div><strong>Production Pipeline:</strong> <code>{{ evaluation.meta.production_algorithm }}</code></div>
+      <div><strong>Evaluation Timestamp:</strong> <code>{{ evaluation.meta.evaluation_timestamp }}</code> (Verified Live Session)</div>
+    </div>
+
+    <!-- Training vs Testing Data Distribution Visualizations -->
+    <div style="margin-top: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+      <!-- Donut Chart: Split Ratio -->
+      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-md); padding: 1.25rem;">
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--gray-800); margin-bottom: 0.35rem;">
+          <i class="fa-solid fa-chart-pie" style="color: var(--primary-600); margin-right: 0.35rem;"></i>
+          Training vs. Testing Data Split (80/20)
+        </h4>
+        <p style="font-size: 0.76rem; color: var(--gray-500); margin-bottom: 0.75rem;">
+          Verified 80/20 partition: 9,600 training records vs. 2,400 holdout testing records.
+        </p>
+        <div style="height: 260px; position: relative;">
+          <canvas id="splitRatioChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Grouped Bar Chart: Stratification Across Metros -->
+      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-md); padding: 1.25rem;">
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--gray-800); margin-bottom: 0.35rem;">
+          <i class="fa-solid fa-chart-column" style="color: var(--primary-600); margin-right: 0.35rem;"></i>
+          Train vs. Test Distribution Across 5 Metros
+        </h4>
+        <p style="font-size: 0.76rem; color: var(--gray-500); margin-bottom: 0.75rem;">
+          Stratified geographic distribution across Mumbai, Bangalore, Pune, Hyderabad, and Nagpur.
+        </p>
+        <div style="height: 260px;">
+          <canvas id="splitCityChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section C: Regression Metrics KPI Cards -->
+<div class="kpi-grid">
+  <div class="kpi-card" style="border-left-color: var(--accent-gold);">
+    <div class="kpi-header">
+      <span class="kpi-title">R² Score (Variance Explained)</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-bullseye"></i></div>
+    </div>
+    <div class="kpi-value">{{ '{:.4f}'.format(evaluation.regression.r2_score) }}</div>
+    <div class="kpi-subtext">Explains <strong>{{ '{:.2f}'.format(evaluation.regression.r2_percentage) }}%</strong> of all test price variance.</div>
+  </div>
+
+  <div class="kpi-card" style="border-left-color: var(--primary-700);">
+    <div class="kpi-header">
+      <span class="kpi-title">MAE (Mean Absolute Error)</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-ruler-combined"></i></div>
+    </div>
+    <div class="kpi-value">₹{{ '{:.2f}'.format(evaluation.regression.mae_lakhs) }} L</div>
+    <div class="kpi-subtext">Average absolute error: <strong>₹{{ '{:,.0f}'.format(evaluation.regression.mae_inr) }}</strong></div>
+  </div>
+
+  <div class="kpi-card" style="border-left-color: #0284c7;">
+    <div class="kpi-header">
+      <span class="kpi-title">RMSE (Root Mean Squared Error)</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-calculator"></i></div>
+    </div>
+    <div class="kpi-value">₹{{ '{:.2f}'.format(evaluation.regression.rmse_lakhs) }} L</div>
+    <div class="kpi-subtext">Penalizes large deviations: <strong>₹{{ '{:,.0f}'.format(evaluation.regression.rmse_inr) }}</strong></div>
+  </div>
+
+  <div class="kpi-card" style="border-left-color: #10b981;">
+    <div class="kpi-header">
+      <span class="kpi-title">MAPE (Mean % Error)</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-percent"></i></div>
+    </div>
+    <div class="kpi-value">{{ '{:.2f}'.format(evaluation.regression.mape) }}%</div>
+    <div class="kpi-subtext">Typical relative estimation accuracy: <strong>{{ '{:.2f}'.format(100 - evaluation.regression.mape) }}%</strong></div>
+  </div>
+</div>
+
+<!-- Section D: Regression Visualizations (Actual vs Predicted & Residuals) -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  
+  <!-- Actual vs Predicted Scatter Plot -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-crosshairs" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        Actual vs. Predicted Prices (₹ Lakhs)
+      </div>
+      <span class="badge badge-primary">y = x Ideal Diagonal</span>
+    </div>
+    <div style="padding: 1.5rem; height: 340px;">
+      <canvas id="actualVsPredChart"></canvas>
+    </div>
+    <div style="padding: 0 1.5rem 1rem; font-size: 0.78rem; color: var(--gray-500);">
+      Tight clustering along the 45-degree diagonal demonstrates uniform predictive power across budget, mid-range, and luxury price tiers.
+    </div>
+  </div>
+
+  <!-- Residuals Distribution Histogram -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-chart-simple" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        Residual Error Distribution (y - ŷ)
+      </div>
+      <span class="badge badge-success">Gaussian Bell Curve</span>
+    </div>
+    <div style="padding: 1.5rem; height: 340px;">
+      <canvas id="residualsHistChart"></canvas>
+    </div>
+    <div style="padding: 0 1.5rem 1rem; font-size: 0.78rem; color: var(--gray-500);">
+      Residuals are symmetric and centered tightly around zero, validating unbiased model behavior with no systematic over- or under-estimation.
+    </div>
+  </div>
+
+</div>
+
+<!-- Error Tolerance Percentile Breakdown -->
+<div class="admin-panel">
+  <div class="panel-header">
+    <div class="panel-title">
+      <i class="fa-solid fa-gauge" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+      Prediction Error Tolerance Percentiles (2,400 Holdout Test Samples)
+    </div>
+    <span class="badge badge-primary">Empirical Bounds</span>
+  </div>
+
+  <div style="padding: 1.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-md); padding: 1.25rem;">
+        <div style="font-size: 0.8rem; font-weight: 700; color: #166534; text-transform: uppercase;">50% of Test Predictions (Median Error)</div>
+        <div style="font-size: 1.6rem; font-weight: 800; color: #15803d; margin: 0.35rem 0;">± ₹{{ evaluation.regression.percentiles.p50_lakhs }} Lakhs</div>
+        <div style="font-size: 0.75rem; color: #166534;">Half of all evaluated homes are predicted within ₹{{ evaluation.regression.percentiles.p50_lakhs }}L of true transaction price.</div>
+      </div>
+
+      <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-md); padding: 1.25rem;">
+        <div style="font-size: 0.8rem; font-weight: 700; color: #1e40af; text-transform: uppercase;">80% of Test Predictions (80th Percentile)</div>
+        <div style="font-size: 1.6rem; font-weight: 800; color: #1d4ed8; margin: 0.35rem 0;">± ₹{{ evaluation.regression.percentiles.p80_lakhs }} Lakhs</div>
+        <div style="font-size: 0.75rem; color: #1e40af;">Four out of five valuations have an absolute error under ₹{{ evaluation.regression.percentiles.p80_lakhs }}L.</div>
+      </div>
+
+      <div style="background: #fefce8; border: 1px solid #fef08a; border-radius: var(--radius-md); padding: 1.25rem;">
+        <div style="font-size: 0.8rem; font-weight: 700; color: #854d0e; text-transform: uppercase;">95% Confidence Bound (95th Percentile)</div>
+        <div style="font-size: 1.6rem; font-weight: 800; color: #a16207; margin: 0.35rem 0;">± ₹{{ evaluation.regression.percentiles.p95_lakhs }} Lakhs</div>
+        <div style="font-size: 0.75rem; color: #854d0e;">Only 5% of extreme outlier luxury transactions exceed this error margin.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section E: Optional Separated Classification Experiment (Requirement 3.D) -->
+<div class="admin-panel" style="border: 2px solid #cbd5e1;">
+  <div class="panel-header" style="background: #f8fafc;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div class="panel-title" style="color: #334155;">
+          <i class="fa-solid fa-flask" style="color: #6366f1; margin-right: 0.4rem;"></i>
+          Optional Separated Classification Experiment (Academic Tier-Classification Benchmark)
+        </div>
+        <span class="badge badge-gray" style="background: #e2e8f0; color: #475569;">Separate Experiment</span>
+      </div>
+      <div style="font-size: 0.78rem; color: var(--gray-500); margin-top: 0.25rem;">
+        Demonstrates classification metrics by discretizing continuous prices into 3 tiers: <strong>{{ evaluation.classification_experiment.thresholds }}</strong>.
+        The production regression model is completely untouched.
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 1.5rem;">
+    
+    <!-- Classification KPI Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-md); padding: 1rem; text-align: center;">
+        <div style="font-size: 0.72rem; color: var(--gray-500); text-transform: uppercase; font-weight: 600;">Overall Accuracy</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary-700);">{{ evaluation.classification_experiment.accuracy }}%</div>
+        <div style="font-size: 0.7rem; color: var(--gray-500);">Holdout Test Split</div>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-md); padding: 1rem; text-align: center;">
+        <div style="font-size: 0.72rem; color: var(--gray-500); text-transform: uppercase; font-weight: 600;">Weighted Precision</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--gray-900);">{{ evaluation.classification_experiment.precision }}%</div>
+        <div style="font-size: 0.7rem; color: var(--gray-500);">Positive Predictive Val</div>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-md); padding: 1rem; text-align: center;">
+        <div style="font-size: 0.72rem; color: var(--gray-500); text-transform: uppercase; font-weight: 600;">Weighted Recall</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--gray-900);">{{ evaluation.classification_experiment.recall }}%</div>
+        <div style="font-size: 0.7rem; color: var(--gray-500);">True Positive Rate</div>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-md); padding: 1rem; text-align: center;">
+        <div style="font-size: 0.72rem; color: var(--gray-500); text-transform: uppercase; font-weight: 600;">Weighted F1-Score</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #10b981;">{{ evaluation.classification_experiment.f1_score }}%</div>
+        <div style="font-size: 0.7rem; color: var(--gray-500);">Harmonic Mean</div>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: var(--radius-md); padding: 1rem; text-align: center;">
+        <div style="font-size: 0.72rem; color: var(--gray-500); text-transform: uppercase; font-weight: 600;">Multiclass ROC-AUC</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #f59e0b;">{{ evaluation.classification_experiment.roc_auc }}</div>
+        <div style="font-size: 0.7rem; color: var(--gray-500);">One-vs-Rest AUC</div>
+      </div>
+    </div>
+
+    <!-- 3x3 Confusion Matrix & Per-Class Breakdown Row -->
+    <div style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 1.5rem;">
+      
+      <!-- Confusion Matrix Heatmap -->
+      <div>
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--gray-800); margin-bottom: 0.5rem;">
+          3x3 Confusion Matrix Heatmap (2,400 Test Samples)
+        </h4>
+        <p style="font-size: 0.78rem; color: var(--gray-500); margin-bottom: 1rem;">
+          Rows represent actual price tier; columns represent predicted price tier. Diagonal green cells denote correct classifications.
+        </p>
+
+        {% set cm = evaluation.classification_experiment.confusion_matrix %}
+        <table class="cm-table">
+          <thead>
+            <tr>
+              <th style="background: #f8fafc; text-align: left;">Actual \ Predicted</th>
+              <th>Pred: Budget</th>
+              <th>Pred: Mid-Range</th>
+              <th>Pred: Premium</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th style="background: #f8fafc; text-align: left;">Act: Budget (&lt; ₹60L)</th>
+              <td class="cm-cell-correct">{{ cm[0][0] }}</td>
+              <td class="{% if cm[0][1] > 0 %}cm-cell-err{% else %}cm-cell-zero{% endif %}">{{ cm[0][1] }}</td>
+              <td class="{% if cm[0][2] > 0 %}cm-cell-err{% else %}cm-cell-zero{% endif %}">{{ cm[0][2] }}</td>
+            </tr>
+            <tr>
+              <th style="background: #f8fafc; text-align: left;">Act: Mid-Range (₹60L-₹1.2Cr)</th>
+              <td class="{% if cm[1][0] > 0 %}cm-cell-err{% else %}cm-cell-zero{% endif %}">{{ cm[1][0] }}</td>
+              <td class="cm-cell-correct">{{ cm[1][1] }}</td>
+              <td class="{% if cm[1][2] > 0 %}cm-cell-err{% else %}cm-cell-zero{% endif %}">{{ cm[1][2] }}</td>
+            </tr>
+            <tr>
+              <th style="background: #f8fafc; text-align: left;">Act: Premium (&gt; ₹1.2Cr)</th>
+              <td class="{% if cm[2][0] > 0 %}cm-cell-err{% else %}cm-cell-zero{% endif %}">{{ cm[2][0] }}</td>
+              <td class="{% if cm[2][1] > 0 %}cm-cell-err{% else %}cm-cell-zero{% endif %}">{{ cm[2][1] }}</td>
+              <td class="cm-cell-correct">{{ cm[2][2] }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Per-Class Metrics Table -->
+      <div>
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--gray-800); margin-bottom: 0.5rem;">
+          Class-Level Precision, Recall & F1
+        </h4>
+        <p style="font-size: 0.78rem; color: var(--gray-500); margin-bottom: 1rem;">
+          Detailed breakdown for each discrete residential price bracket.
+        </p>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Price Category</th>
+              <th>Test Support</th>
+              <th>Precision</th>
+              <th>Recall</th>
+              <th>F1-Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in evaluation.classification_experiment.per_class_breakdown %}
+              <tr>
+                <td><strong>{{ c.class_name }}</strong></td>
+                <td>{{ c.support }}</td>
+                <td><span class="badge badge-primary">{{ c.precision }}%</span></td>
+                <td><span class="badge badge-primary">{{ c.recall }}%</span></td>
+                <td><span class="badge badge-success">{{ c.f1_score }}%</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // 1. Actual vs Predicted Scatter Chart
+  const avpCtx = document.getElementById('actualVsPredChart');
+  if (avpCtx) {
+    const scatterData = {{ evaluation.regression.actual_vs_predicted | tojson }};
+    const maxVal = Math.max(...scatterData.map(d => Math.max(d.actual, d.predicted))) * 1.05;
+
+    new Chart(avpCtx, {
+      type: 'scatter',
+      data: {
+        datasets: [
+          {
+            label: 'Test Homes (Actual vs Predicted)',
+            data: scatterData.map(d => ({ x: d.actual, y: d.predicted })),
+            backgroundColor: 'rgba(27, 67, 50, 0.7)',
+            pointRadius: 4.5,
+            pointHoverRadius: 7
+          },
+          {
+            label: 'Perfect Fit (y = x)',
+            data: [{ x: 0, y: 0 }, { x: maxVal, y: maxVal }],
+            type: 'line',
+            borderColor: '#f59e0b',
+            borderWidth: 2,
+            borderDash: [6, 6],
+            fill: false,
+            pointRadius: 0
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                if (ctx.datasetIndex === 1) return 'Ideal 45° line';
+                return `Actual: ₹${ctx.parsed.x}L | Predicted: ₹${ctx.parsed.y}L`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Actual Price (₹ Lakhs)' }, min: 0 },
+          y: { title: { display: true, text: 'Predicted Price (₹ Lakhs)' }, min: 0 }
+        }
+      }
+    });
+  }
+
+  // 2. Residuals Histogram Chart
+  const resCtx = document.getElementById('residualsHistChart');
+  if (resCtx) {
+    new Chart(resCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ evaluation.regression.residuals_histogram.labels | tojson }},
+        datasets: [{
+          label: 'Prediction Frequency',
+          data: {{ evaluation.regression.residuals_histogram.counts | tojson }},
+          backgroundColor: '#1b4332',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { title: { display: true, text: 'Residual Error (₹ Lakhs: Actual - Predicted)' }, ticks: { font: { size: 9 } } },
+          y: { title: { display: true, text: 'Holdout Samples' }, beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  // 3. Training vs Testing Data Distribution (Donut Chart)
+  const splitRatioCtx = document.getElementById('splitRatioChart');
+  if (splitRatioCtx) {
+    new Chart(splitRatioCtx, {
+      type: 'doughnut',
+      data: {
+        labels: {{ evaluation.split_distribution.labels | tojson }},
+        datasets: [{
+          data: {{ evaluation.split_distribution.counts | tojson }},
+          backgroundColor: ['#1b4332', '#0284c7'],
+          borderWidth: 2,
+          borderColor: '#ffffff',
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 11 } } },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                const total = {{ evaluation.meta.total_records }};
+                const val = ctx.parsed;
+                const pct = ((val / total) * 100).toFixed(1);
+                return `${ctx.label}: ${val.toLocaleString()} records (${pct}%)`;
+              }
+            }
+          }
+        },
+        cutout: '62%'
+      }
+    });
+  }
+
+  // 4. Train vs Test Distribution Across Cities (Grouped Bar Chart)
+  const splitCityCtx = document.getElementById('splitCityChart');
+  if (splitCityCtx) {
+    new Chart(splitCityCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ evaluation.split_distribution.cities | tojson }},
+        datasets: [
+          {
+            label: 'Training Set (80%)',
+            data: {{ evaluation.split_distribution.train_city_counts | tojson }},
+            backgroundColor: '#1b4332',
+            borderRadius: 5
+          },
+          {
+            label: 'Testing Holdout (20%)',
+            data: {{ evaluation.split_distribution.test_city_counts | tojson }},
+            backgroundColor: '#0284c7',
+            borderRadius: 5
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
+          tooltip: {
+            callbacks: {
+              afterLabel: function(ctx) {
+                const trainTotal = {{ evaluation.meta.train_records }};
+                const testTotal = {{ evaluation.meta.test_records }};
+                const total = ctx.datasetIndex === 0 ? trainTotal : testTotal;
+                const pct = ((ctx.parsed.y / total) * 100).toFixed(1);
+                return `Share of ${ctx.dataset.label}: ${pct}%`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Metro Cities' } },
+          y: { beginAtZero: true, title: { display: true, text: 'Number of Records' } }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

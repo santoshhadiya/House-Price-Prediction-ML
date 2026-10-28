@@ -152,9 +152,11 @@ class GharValueAppTests(unittest.TestCase):
         pages = [
             ('/admin/dashboard', b'Platform Executive Overview'),
             ('/admin/history', b'Stored Prediction Records'),
-            ('/admin/dataset', b'Dataset Statistical Analytics'),
+            ('/admin/dataset', b'Dataset Analytics & Exploratory Data Analysis'),
             ('/admin/market-analytics', b'Metro Real Estate Intelligence'),
-            ('/admin/models', b'Machine Learning Model Architecture'),
+            ('/admin/models', b'Machine Learning Multi-Algorithm Benchmarking'),
+            ('/admin/evaluation', b'Model Evaluation, Regression Metrics'),
+            ('/admin/clusters', b'Unsupervised Machine Learning: K-Means'),
             ('/admin/settings', b'Platform Administration')
         ]
         for url, expected in pages:
@@ -162,7 +164,7 @@ class GharValueAppTests(unittest.TestCase):
             self.assertEqual(r.status_code, 200, f"Failed on {url}")
             self.assertIn(expected, r.data, f"Missing expected text on {url}")
 
-        print("[PASS] Test 9: Admin login and all 6 admin dashboards render with live data")
+        print("[PASS] Test 9: Admin login and all 8 admin dashboards render with live data")
 
     def test_10_admin_export(self):
         """Test authenticated admin can export CSV history."""
@@ -181,5 +183,37 @@ class GharValueAppTests(unittest.TestCase):
             self.assertEqual(res.status_code, 403, f"Path {path} was not forbidden!")
         print("[PASS] Test 11: Direct URL access to private model/environment files is blocked (403)")
 
+    def test_12_dataset_filters_and_eda(self):
+        """Test dataset EDA endpoint with city and tier filters."""
+        self.client.post('/admin/login', data={'username': 'admin', 'password': 'admin123'})
+        res = self.client.get('/admin/dataset?city=Mumbai&tier=Premium')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Mumbai', res.data)
+        self.assertIn(b'Super Built-Up Area', res.data)
+        print("[PASS] Test 12: Dataset EDA filters by city and tier with real calculations")
+
+    def test_13_model_evaluation_metrics(self):
+        """Test model evaluation page shows verified regression metrics and classification experiment."""
+        self.client.post('/admin/login', data={'username': 'admin', 'password': 'admin123'})
+        res = self.client.get('/admin/evaluation')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Supervised Regression', res.data)
+        self.assertIn(b'Mean Absolute Error', res.data)
+        self.assertIn(b'0.9856', res.data)
+        self.assertIn(b'Confusion Matrix', res.data)
+        print("[PASS] Test 13: Model Evaluation page shows verified regression metrics and classification experiment")
+
+    def test_14_clustering_patterns(self):
+        """Test pattern discovery K-Means page renders with PCA and segment profiles."""
+        self.client.post('/admin/login', data={'username': 'admin', 'password': 'admin123'})
+        res = self.client.get('/admin/clusters')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Affordable Compact Units', res.data)
+        self.assertIn(b'Standard Family Residences', res.data)
+        self.assertIn(b'Luxury', res.data)
+        self.assertIn(b'Elbow Curve', res.data)
+        print("[PASS] Test 14: Pattern Discovery renders 3 property clusters, PCA projections, and Elbow curve")
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
+

@@ -83,18 +83,6 @@
       </div>
     </div>
 
-    <!-- Geographic Map of Supported Metros -->
-    <div class="card" style="margin-bottom: 2.5rem; padding: 1.5rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-        <div>
-          <h3 style="font-size: 1.25rem; color: var(--primary-900);">Geographic Metro Overview</h3>
-          <p style="font-size: 0.85rem; color: var(--gray-500); margin: 0;">City-level property distributions and average valuations across key Indian real estate hubs.</p>
-        </div>
-        <span class="badge badge-primary"><i class="fa-solid fa-map-pin"></i> 5 Major Hubs</span>
-      </div>
-      <div id="metroMap" class="map-container"></div>
-    </div>
-
     <!-- Charts Grid -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem; margin-bottom: 2.5rem;">
       
@@ -151,49 +139,7 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  // 1. Initialize Leaflet Map for Indian Metros
-  const mapElement = document.getElementById('metroMap');
-  if (mapElement) {
-    const map = L.map('metroMap').setView([19.7515, 75.7139], 5);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    const cityPoints = [
-      { name: 'Mumbai', coords: [19.0760, 72.8777], avg: '₹1.62 Cr', median: '₹1.43 Cr', count: '3,056 listings', ppsqft: '₹15,890 / sqft' },
-      { name: 'Bangalore', coords: [12.9716, 77.5946], avg: '₹98.01 L', median: '₹87.57 L', count: '2,410 listings', ppsqft: '₹9,620 / sqft' },
-      { name: 'Hyderabad', coords: [17.3850, 78.4867], avg: '₹76.53 L', median: '₹68.60 L', count: '2,125 listings', ppsqft: '₹7,510 / sqft' },
-      { name: 'Pune', coords: [18.5204, 73.8567], avg: '₹88.08 L', median: '₹78.83 L', count: '2,674 listings', ppsqft: '₹8,650 / sqft' },
-      { name: 'Nagpur', coords: [21.1458, 79.0882], avg: '₹55.09 L', median: '₹48.57 L', count: '1,735 listings', ppsqft: '₹5,410 / sqft' }
-    ];
-
-    cityPoints.forEach(function (city) {
-      const marker = L.circleMarker(city.coords, {
-        color: '#1b4332',
-        fillColor: '#52b788',
-        fillOpacity: 0.85,
-        radius: 12,
-        weight: 2
-      }).addTo(map);
-
-      const popupHtml = `
-        <div style="font-family:'Plus Jakarta Sans',sans-serif; padding:4px;">
-          <h4 style="margin:0 0 4px; color:#0b2518; font-size:1rem;">${city.name}</h4>
-          <div style="font-size:0.82rem; color:#374151; line-height:1.5;">
-            <div><strong>Avg Price:</strong> ${city.avg}</div>
-            <div><strong>Median:</strong> ${city.median}</div>
-            <div><strong>Rate:</strong> ${city.ppsqft}</div>
-            <div style="color:#6b7280; font-size:0.75rem; margin-top:2px;">${city.count}</div>
-          </div>
-        </div>
-      `;
-      marker.bindPopup(popupHtml);
-    });
-  }
-
-  // 2. City Average vs Median Chart
+  // 1. City Average vs Median Chart
   const cityCtx = document.getElementById('cityPriceChart');
   if (cityCtx) {
     new Chart(cityCtx, {

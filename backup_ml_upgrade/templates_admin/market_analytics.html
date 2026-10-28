@@ -1,0 +1,189 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Market Analytics — GharValue Admin{% endblock %}
+{% block page_title %}Metro Real Estate Intelligence & Price Indices{% endblock %}
+
+{% block admin_content %}
+<!-- Overview Row -->
+<div class="kpi-grid">
+  <div class="kpi-card" style="border-left-color: var(--primary-700);">
+    <div class="kpi-header">
+      <span class="kpi-title">Highest Tier-1 Avg</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-crown"></i></div>
+    </div>
+    <div class="kpi-value">₹1.62 Cr</div>
+    <div class="kpi-subtext">Mumbai Metro (Avg ₹15,890 / sqft)</div>
+  </div>
+
+  <div class="kpi-card" style="border-left-color: var(--primary-600);">
+    <div class="kpi-header">
+      <span class="kpi-title">Premium Tier Premium</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-arrow-trend-up"></i></div>
+    </div>
+    <div class="kpi-value">+156%</div>
+    <div class="kpi-subtext">Premium Tier vs Budget Tier average</div>
+  </div>
+
+  <div class="kpi-card" style="border-left-color: var(--primary-500);">
+    <div class="kpi-header">
+      <span class="kpi-title">Gated Society Premium</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-shield-halved"></i></div>
+    </div>
+    <div class="kpi-value">+18.4%</div>
+    <div class="kpi-subtext">Price differential for 24/7 security</div>
+  </div>
+
+  <div class="kpi-card" style="border-left-color: var(--primary-400);">
+    <div class="kpi-header">
+      <span class="kpi-title">Average Metro Rate</span>
+      <div class="kpi-icon-wrap"><i class="fa-solid fa-calculator"></i></div>
+    </div>
+    <div class="kpi-value">₹9,689</div>
+    <div class="kpi-subtext">INR per square foot baseline</div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  
+  <!-- City & Tier Price Matrix Chart -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-layer-group" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        City & Locality Tier Cross-Analysis (₹ Lakhs)
+      </div>
+      <span class="badge badge-primary">Multivariate</span>
+    </div>
+    <div style="padding: 1.5rem; height: 340px;">
+      <canvas id="cityTierChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Amenities Premium Analysis -->
+  <div class="admin-panel" style="margin-bottom: 0;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-tree-city" style="color: var(--primary-600); margin-right: 0.4rem;"></i>
+        Amenities Impact on Valuation (₹ Lakhs)
+      </div>
+      <span class="badge badge-primary">Value Drivers</span>
+    </div>
+    <div style="padding: 1.5rem; height: 340px;">
+      <canvas id="amenitiesChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- City & Locality Matrix Table -->
+<div class="admin-panel">
+  <div class="panel-header">
+    <div class="panel-title">City & Locality Tier Valuation Matrix</div>
+    <span class="badge badge-primary">Real Data Benchmarks</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>City</th>
+          <th>Budget Tier Avg (₹ Lakhs)</th>
+          <th>Mid Tier Avg (₹ Lakhs)</th>
+          <th>Premium Tier Avg (₹ Lakhs)</th>
+          <th>Overall Avg Price</th>
+          <th>Avg Rate (₹ / sqft)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in matrix_data %}
+        <tr>
+          <td><strong>{{ row.city }}</strong></td>
+          <td>₹{{ '{:.2f}'.format(row.budget_avg) }} L</td>
+          <td>₹{{ '{:.2f}'.format(row.mid_avg) }} L</td>
+          <td><strong style="color: var(--primary-800);">₹{{ '{:.2f}'.format(row.premium_avg) }} L</strong></td>
+          <td>₹{{ '{:.2f}'.format(row.overall_avg) }} L</td>
+          <td>₹{{ '{:,.0f}'.format(row.avg_ppsqft) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // 1. City & Tier Grouped Chart
+  const cityTierCtx = document.getElementById('cityTierChart');
+  if (cityTierCtx) {
+    new Chart(cityTierCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ market_charts.cities | tojson }},
+        datasets: [
+          {
+            label: 'Budget Tier',
+            data: {{ market_charts.budget_prices | tojson }},
+            backgroundColor: '#74c69d',
+            borderRadius: 4
+          },
+          {
+            label: 'Mid Tier',
+            data: {{ market_charts.mid_prices | tojson }},
+            backgroundColor: '#2d6a4f',
+            borderRadius: 4
+          },
+          {
+            label: 'Premium Tier',
+            data: {{ market_charts.premium_prices | tojson }},
+            backgroundColor: '#0b2518',
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'Average Price (₹ Lakhs)' } }
+        }
+      }
+    });
+  }
+
+  // 2. Amenities Premium Chart
+  const amenitiesCtx = document.getElementById('amenitiesChart');
+  if (amenitiesCtx) {
+    new Chart(amenitiesCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Parking', 'Elevator / Lift', 'Gated Society'],
+        datasets: [
+          {
+            label: 'With Amenity',
+            data: {{ market_charts.amenity_with | tojson }},
+            backgroundColor: '#1b4332',
+            borderRadius: 6
+          },
+          {
+            label: 'Without Amenity',
+            data: {{ market_charts.amenity_without | tojson }},
+            backgroundColor: '#9ca3af',
+            borderRadius: 6
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'Average Price (₹ Lakhs)' } }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}
